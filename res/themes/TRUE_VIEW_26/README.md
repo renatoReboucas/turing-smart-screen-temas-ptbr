@@ -43,6 +43,22 @@ This installs under `%LOCALAPPDATA%\TRUEVIEW26` and registers the
 
 See [METRICS.md](METRICS.md) for definitions, units and fallbacks.
 
+### Windows sensor troubleshooting
+
+GPU load and fan RPM appear only when a supported sensor backend and the
+hardware driver expose those values. Missing readings remain `N/A`. Run from
+PowerShell to see diagnostics:
+
+```powershell
+Set-Location "$env:LOCALAPPDATA\TRUEVIEW26"
+Stop-ScheduledTask -TaskName "TRUEVIEW26 Display" -ErrorAction SilentlyContinue
+.\.venv\Scripts\python.exe -m trueview26 --config .\config.yaml
+```
+
+If a reading remains unavailable, share warning lines from
+`logs\trueview26.log`, the GPU and motherboard models, and whether
+LibreHardwareMonitor shows those sensors on that PC.
+
 ## Tests
 
 ```bash

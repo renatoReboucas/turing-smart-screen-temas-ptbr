@@ -27,6 +27,30 @@ the 3.5-inch frame format to a 5-inch or 7-inch display with the same VID/PID.
 If a genuine 3.5-inch clone has a different serial number, set
 `allow_unverified_device: true` only after confirming its resolution and protocol.
 
+### Windows sensor troubleshooting
+
+GPU load and fan RPM appear only when a supported sensor backend and the
+hardware driver expose those values. Missing readings remain `N/A`. Run from
+PowerShell to see diagnostics:
+
+```powershell
+Set-Location "$env:LOCALAPPDATA\NEXUS26"
+Stop-ScheduledTask -TaskName "NEXUS26 Display" -ErrorAction SilentlyContinue
+.\.venv\Scripts\python.exe -m nexus26 --config .\config.yaml
+```
+
+If a reading remains unavailable, share warning lines from
+`logs\nexus26.log`, the GPU and motherboard models, and whether
+LibreHardwareMonitor shows those sensors on that PC.
+
+## Screen orientation
+
+NEXUS 26 currently renders only the 480×320 landscape layout. Portrait needs a
+separate 320×480 layout and is not supported yet. There is no user-facing
+rotation setting for upside-down landscape; controller rotation values can
+vary by screen revision, so share the revision before changing the orientation
+command.
+
 ## Quick preview
 
 From this directory:

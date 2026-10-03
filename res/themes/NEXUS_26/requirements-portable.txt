@@ -4,3 +4,5 @@ psutil>=6,<8
 pyserial>=3.5,<4
 PyUSB>=1.2,<2
 PyYAML>=6,<7
+pythonnet~=3.0.5; sys_platform == "win32"
+pywin32>=311; sys_platform == "win32"

@@ -107,9 +107,18 @@ A premium dark-navy system monitoring dashboard with custom vector hardware icon
    ```
 
 ### Windows (Powershell)
-Open PowerShell as Administrator:
+Clone this repository and open PowerShell in its root directory. These themes
+run as standalone applications; they do not appear inside the Turing System
+Monitor theme list. Close that app and stop any other display theme before
+starting one, because only one process can own the screen connection at a time.
+The installer stops and disables the other showcase theme tasks while enabling
+the selected theme, so only that theme starts at the next logon. Run another
+theme's installer to switch later.
+
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
+git clone https://github.com/thairc-dev/turing-smart-screen-custom-themes.git
+Set-Location .\turing-smart-screen-custom-themes
+Set-ExecutionPolicy -Scope Process Bypass
 
 # Install APEX 01
 .\res\themes\APEX_01\installers\install-windows.ps1
@@ -119,6 +128,12 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 
 # Or install TRUE VIEW 26
 .\res\themes\TRUE_VIEW_26\installers\install-windows.ps1
+
+# Or install NEXUS 26
+.\res\themes\NEXUS_26\installers\install-windows.ps1
+
+# Or install NEXUS MINIMAL
+.\res\themes\NEXUS_MINIMAL\installers\install-windows.ps1
 ```
 
 ---

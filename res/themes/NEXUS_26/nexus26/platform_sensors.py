@@ -152,21 +152,24 @@ class WindowsSensorSampler:
         self._nvml_active = False
         self._wmi_handle = None
         self._lock = threading.Lock()
-        self._initialized = False
+        self.start()
 
     def start(self) -> None:
-        # Guard: only initialize hardware libraries once
-        if self._initialized:
-            return
-        self._initialized = True
-
         # 1. Try LibreHardwareMonitorLib.dll via pythonnet / clr
         try:
             import clr
-            dll_dir = Path(__file__).resolve().parents[3] / "external" / "LibreHardwareMonitor"
-            lhm_dll = str(dll_dir / "LibreHardwareMonitorLib.dll")
-            hid_dll = str(dll_dir / "HidSharp.dll")
-            if os.path.exists(lhm_dll):
+            module_path = Path(__file__).resolve()
+            dll_dirs = (
+                module_path.parents[1] / "external" / "LibreHardwareMonitor",
+                module_path.parents[4] / "external" / "LibreHardwareMonitor",
+            )
+            dll_dir = next(
+                (candidate for candidate in dll_dirs if (candidate / "LibreHardwareMonitorLib.dll").is_file()),
+                None,
+            )
+            if dll_dir is not None:
+                lhm_dll = str(dll_dir / "LibreHardwareMonitorLib.dll")
+                hid_dll = str(dll_dir / "HidSharp.dll")
                 clr.AddReference(hid_dll)
                 clr.AddReference(lhm_dll)
                 from LibreHardwareMonitor import Hardware
@@ -182,7 +185,7 @@ class WindowsSensorSampler:
                 LOG.info("Windows hardware sensors enabled using LibreHardwareMonitorLib")
                 return
         except Exception as exc:
-            LOG.debug("LibreHardwareMonitor initialization skipped: %s", exc)
+            LOG.warning("LibreHardwareMonitor unavailable; Windows sensor fallbacks will be used: %s", exc)
 
         # 2. Try NVML / GPUtil fallback for NVIDIA GPU
         try:
@@ -191,14 +194,14 @@ class WindowsSensorSampler:
             self._nvml_active = True
             LOG.info("Windows GPU sensors enabled using pynvml")
         except Exception:
-            pass
+            LOG.debug("NVML unavailable; NVIDIA GPU sensor fallback is disabled", exc_info=True)
 
         # 3. Try WMI for OpenHardwareMonitor
         try:
             import wmi
             self._wmi_handle = wmi.WMI()
         except Exception:
-            pass
+            LOG.debug("OpenHardwareMonitor WMI fallback unavailable", exc_info=True)
 
     def stop(self) -> None:
         if self._lhm_computer:
@@ -241,12 +244,19 @@ class WindowsSensorSampler:
                 gpu_loads = []
                 fan_rpms = []
 
-                for hardware in self._lhm_computer.Hardware:
-                    hardware.Update()
-                    for subhw in hardware.SubHardware:
-                        subhw.Update()
-                    htype = hardware.HardwareType
+                hardware_nodes = []
 
+                def collect_hardware(node):
+                    node.Update()
+                    hardware_nodes.append(node)
+                    for child in node.SubHardware:
+                        collect_hardware(child)
+
+                for hardware in self._lhm_computer.Hardware:
+                    collect_hardware(hardware)
+
+                for hardware in hardware_nodes:
+                    htype = hardware.HardwareType
                     for sensor in hardware.Sensors:
                         if sensor.Value is None:
                             continue
@@ -269,6 +279,11 @@ class WindowsSensorSampler:
                 gpu_temp = float(sum(gpu_temps) / len(gpu_temps)) if gpu_temps else None
                 gpu_load = float(sum(gpu_loads) / len(gpu_loads)) if gpu_loads else None
                 fan_rpm = int(sum(fan_rpms) / len(fan_rpms)) if fan_rpms else None
+
+                if gpu_load is None:
+                    LOG.info("LibreHardwareMonitor is active but exposes no GPU load sensor")
+                if fan_rpm is None:
+                    LOG.info("LibreHardwareMonitor is active but exposes no fan RPM sensor")
 
                 return gpu_load, cpu_temp, gpu_temp, fan_rpm, None, None
             except Exception as exc:
@@ -310,7 +325,7 @@ class WindowsSensorSampler:
                     gpu_load = float(gpus[0].load * 100)
                     gpu_temp = float(gpus[0].temperature)
             except Exception:
-                pass
+                LOG.debug("GPUtil GPU fallback unavailable", exc_info=True)
 
         # CPU Temp via psutil or WMI
         try:
@@ -329,7 +344,7 @@ class WindowsSensorSampler:
                 if c_t:
                     cpu_temp = sum(c_t) / len(c_t)
             except Exception:
-                pass
+                LOG.debug("OpenHardwareMonitor WMI temperature query failed", exc_info=True)
 
         # Fan RPM via psutil
         try:
@@ -339,7 +354,12 @@ class WindowsSensorSampler:
                 if rpms:
                     fan_rpm = int(sum(rpms) / len(rpms))
         except Exception:
-            pass
+            LOG.debug("Windows platform did not expose fan RPM through psutil", exc_info=True)
+
+        if gpu_load is None:
+            LOG.info("No supported Windows GPU load sensor found; GPU load will display N/A")
+        if fan_rpm is None:
+            LOG.info("No supported Windows fan RPM sensor found; fan speed will display N/A")
 
         return gpu_load, cpu_temp, gpu_temp, fan_rpm, None, None
 
