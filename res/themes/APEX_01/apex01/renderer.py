@@ -371,6 +371,11 @@ def render_frame(
     gpu_percent_str = "N/A" if snapshot.gpu_percent is None else f"{snapshot.gpu_percent:.0f}%"
     gpu_color = BLUE if snapshot.gpu_percent is not None else (140, 140, 140)
     d.text((264, 192), gpu_percent_str, fill=gpu_color, font=fBigVal)
+    gpu_vram_val = "N/A"
+    if snapshot.gpu_vram_total_gb and snapshot.gpu_vram_total_gb > 0:
+        gpu_vram_used = snapshot.gpu_vram_used_gb or 0.0
+        gpu_vram_val = f"{gpu_vram_used:.1f}/{snapshot.gpu_vram_total_gb:.0f}G"
+    d.text((264, 224), f"VRAM {gpu_vram_val}", fill=(160, 191, 255), font=fNano)
     draw_10_segment_rgb_pill_bar(
         d,
         [348, 202, 454, 224],
@@ -485,22 +490,18 @@ def render_frame(
     d.text((324, 270), cpu_temp, fill=ORANGE, font=fHeaderTime)
     draw_mini_wave_graph(d, [294, 298, 372, 306], temp_history, line_color=ORANGE)
 
-    # Column 5: FAN (X=380..468, Start X=415)
-    draw_fan_blade_icon(d, 386, 264, WHITE, image=image)
-    d.text((415, 258), "FAN", fill=WHITE, font=fMedium)
-    fan_rpm = snapshot.fan_rpm
-    if fan_rpm is None:
-        d.text((415, 268), "N/A", fill=(140, 140, 140), font=fMicro)
+    # Column 5: VRAM (X=380..468, Start X=415)
+    draw_ram_stick_icon(d, 388, 268, PURPLE)
+    d.text((415, 258), "VRAM", fill=WHITE, font=fMedium)
+    vram_total = snapshot.gpu_vram_total_gb
+    if vram_total is None or vram_total <= 0:
+        d.text((415, 270), "N/A", fill=(140, 140, 140), font=fMicro)
         d.text((415, 290), "NO SENSOR", fill=(120, 120, 120), font=fNano)
     else:
-        fan_status = "SILENT" if fan_rpm == 0 else "ACTIVE"
-        rpm_str = str(fan_rpm)
-        if len(rpm_str) <= 2:
-            d.text((415, 270), rpm_str, fill=WHITE, font=fHeaderTime)
-            d.text((426, 274), "RPM", fill=WHITE, font=fNano)
-        else:
-            d.text((415, 272), f"{rpm_str} RPM", fill=WHITE, font=fMicro)
-        d.text((415, 290), fan_status, fill=(160, 190, 220), font=fNano)
+        vram_used = snapshot.gpu_vram_used_gb or 0.0
+        vram_percent = min(100.0, (vram_used / vram_total) * 100.0)
+        d.text((415, 268), f"{vram_used:.1f}/{vram_total:.0f}G", fill=WHITE, font=fMicro)
+        d.text((415, 288), f"{vram_percent:.0f}%", fill=(160, 190, 220), font=fNano)
 
     return image
 

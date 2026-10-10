@@ -30,6 +30,8 @@ class MetricsSnapshot:
     cpu_temp_c: float | None = None
     gpu_percent: float | None = None
     gpu_temp_c: float | None = None
+    gpu_vram_used_gb: float = 0.0
+    gpu_vram_total_gb: float = 0.0
     ram_percent: float = 0.0
     ram_used_gb: float = 0.0
     ram_total_gb: float = 0.0
@@ -233,6 +235,7 @@ class MetricsCollector:
                     )
                 gpu_percent = cpu_temp = gpu_temp = None
                 fan_rpm = None
+                gpu_vram_used_gb = gpu_vram_total_gb = None
                 sensor_ram_used = sensor_ram_total = None
                 if self._platform_sensors:
                     (
@@ -240,9 +243,15 @@ class MetricsCollector:
                         cpu_temp,
                         gpu_temp,
                         fan_rpm,
-                        sensor_ram_used,
-                        sensor_ram_total,
+                        gpu_vram_used_gb,
+                        gpu_vram_total_gb,
                     ) = self._platform_sensors.snapshot()
+                if gpu_vram_used_gb is not None and gpu_vram_total_gb:
+                    gpu_vram_used = gpu_vram_used_gb
+                    gpu_vram_total = gpu_vram_total_gb
+                else:
+                    gpu_vram_used = 0.0
+                    gpu_vram_total = 0.0
                 if sensor_ram_used is not None and sensor_ram_total:
                     ram_used_bytes = sensor_ram_used
                     ram_total_bytes = sensor_ram_total
@@ -280,6 +289,8 @@ class MetricsCollector:
                     cpu_temp_c=cpu_temp,
                     gpu_percent=gpu_percent,
                     gpu_temp_c=gpu_temp,
+                    gpu_vram_used_gb=gpu_vram_used,
+                    gpu_vram_total_gb=gpu_vram_total,
                     disk_percent=disk_percent,
                     disk_used_gb=disk_used_gb,
                     disk_total_gb=disk_total_gb,

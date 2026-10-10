@@ -219,8 +219,8 @@ class WindowsSensorSampler:
         float | None,
         float | None,
         int | None,
-        int | None,
-        int | None,
+        float | None,
+        float | None,
     ]:
         if self._lhm_active and self._lhm_computer:
             return self._snapshot_lhm()
@@ -233,8 +233,8 @@ class WindowsSensorSampler:
         float | None,
         float | None,
         int | None,
-        int | None,
-        int | None,
+        float | None,
+        float | None,
     ]:
         with self._lock:
             try:
@@ -297,13 +297,15 @@ class WindowsSensorSampler:
         float | None,
         float | None,
         int | None,
-        int | None,
-        int | None,
+        float | None,
+        float | None,
     ]:
         gpu_load = None
         gpu_temp = None
         cpu_temp = None
         fan_rpm = None
+        gpu_vram_used = None
+        gpu_vram_total = None
 
         # GPU via pynvml
         if self._nvml_active:
@@ -313,6 +315,9 @@ class WindowsSensorSampler:
                 rates = pynvml.nvmlDeviceGetUtilizationRates(handle)
                 gpu_load = float(rates.gpu)
                 gpu_temp = float(pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU))
+                mem = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                gpu_vram_used = float(mem.used) / 1024**3
+                gpu_vram_total = float(mem.total) / 1024**3
             except Exception:
                 pass
 
@@ -324,6 +329,8 @@ class WindowsSensorSampler:
                 if gpus:
                     gpu_load = float(gpus[0].load * 100)
                     gpu_temp = float(gpus[0].temperature)
+                    gpu_vram_used = float(getattr(gpus[0], "memoryUsed", 0) or 0) / 1024.0
+                    gpu_vram_total = float(getattr(gpus[0], "memoryTotal", 0) or 0) / 1024.0
             except Exception:
                 LOG.debug("GPUtil GPU fallback unavailable", exc_info=True)
 
@@ -361,7 +368,7 @@ class WindowsSensorSampler:
         if fan_rpm is None:
             LOG.info("No supported Windows fan RPM sensor found; fan speed will display N/A")
 
-        return gpu_load, cpu_temp, gpu_temp, fan_rpm, None, None
+        return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used, gpu_vram_total
 
 
 class LinuxSensorSampler:
@@ -380,13 +387,15 @@ class LinuxSensorSampler:
         float | None,
         float | None,
         int | None,
-        int | None,
-        int | None,
+        float | None,
+        float | None,
     ]:
         cpu_temp = None
         gpu_temp = None
         gpu_load = None
         fan_rpm = None
+        gpu_vram_used = None
+        gpu_vram_total = None
 
         try:
             temps = psutil.sensors_temperatures()
@@ -420,7 +429,11 @@ class LinuxSensorSampler:
         if gpu_load is None:
             try:
                 out = subprocess.check_output(
-                    ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"],
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total",
+                        "--format=csv,noheader,nounits",
+                    ],
                     text=True,
                     timeout=1,
                 )
@@ -429,10 +442,16 @@ class LinuxSensorSampler:
                     gpu_load = float(parts[0])
                 if len(parts) >= 2 and parts[1].isdigit() and gpu_temp is None:
                     gpu_temp = float(parts[1])
+                if len(parts) >= 4:
+                    try:
+                        gpu_vram_used = float(parts[2]) / 1024.0
+                        gpu_vram_total = float(parts[3]) / 1024.0
+                    except ValueError:
+                        pass
             except Exception:
                 pass
 
-        return gpu_load, cpu_temp, gpu_temp, fan_rpm, None, None
+        return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used, gpu_vram_total
 
 
 def create_platform_sensor_sampler(interval_ms: int = 500):
