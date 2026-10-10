@@ -1,160 +1,37 @@
-# 🚀 TURZX 3.5" Smart Display - Ultimate Custom Themes
+# Temas para tela TURZX/Turing de 3,5 polegadas
 
-## Versão em português (Brasil)
+Coleção de cinco temas independentes para telas USB de 480 × 320: **APEX 01**, **NOVA 01**, **NEXUS 26**, **NEXUS MINIMAL** e **TRUE VIEW 26**. Os temas se comunicam diretamente com a tela e não aparecem na lista do aplicativo Turing System Monitor.
 
-Este repositório reúne cinco temas independentes para telas TURZX/Turing de 3,5" (480 × 320): **APEX 01**, **NOVA 01**, **NEXUS 26**, **NEXUS MINIMAL** e **TRUE VIEW 26**. Eles se comunicam diretamente com a tela; não aparecem na lista de temas do aplicativo Turing System Monitor.
+Este repositório é uma adaptação de [turing-smart-screen-custom-themes](https://github.com/thairc-dev/turing-smart-screen-custom-themes). Os créditos e avisos de licença dos autores originais foram mantidos. Este projeto não é afiliado à Turing/TURZX.
 
-No **APEX 01**, a data e as condições meteorológicas foram traduzidas para português. O cartão SSD foi substituído por uso e temperatura da GPU; esses valores dependem dos sensores disponíveis no computador e podem aparecer como `N/A`.
+## Executar no Windows 11
 
-Para instalar no Windows e configurar a inicialização automática, consulte o [guia para assistentes de IA](GUIA_IA_WINDOWS.md). O código e os créditos dos autores originais foram preservados. Esta coleção não é afiliada à Turing/TURZX.
+Abra o PowerShell na pasta do repositório. Feche o Turing System Monitor e qualquer outro programa que esteja usando a tela. Execute apenas um tema por vez:
 
----
+| Tema | Comando |
+|---|---|
+| APEX 01 | `.\run_APEX_01.bat` |
+| NEXUS 26 | `.\run_NEXUS_26.bat` |
+| NEXUS MINIMAL | `.\run_NEXUS_MINIMAL.bat` |
+| NOVA 01 | `.\run_NOVA_01.bat` |
+| TRUE VIEW 26 | `.\run_TRUE_VIEW_26.bat` |
 
-A collection of high-performance, deduplicated, beautifully designed custom themes for **TURZX / Turing 3.5-inch USB Smart Displays** (480x320 resolution). Built with standalone Python renderers, native Apple Silicon (`macmon` & `ioreg`) sensor integration, and cross-platform support.
+Para iniciar usando o lançador genérico: `.\run_theme.bat APEX_01` (substitua `APEX_01` por `NEXUS_26`, `NEXUS_MINIMAL`, `NOVA_01` ou `TRUE_VIEW_26`). Para encerrar o APEX 01 e solicitar que a tela desligue: `.\parar_tela.bat`. Para parar outro tema, pressione `Ctrl+C` no terminal em que ele está rodando.
 
-Created by [thairc-dev](https://github.com/thairc-dev) (author of [mac-server-mode](https://github.com/thairc-dev/mac-server-mode)).
+Consulte o [guia de execução dos arquivos BAT no Windows 11](EXECUTAR_BATS_WINDOWS_11.md) para comandos copiáveis, preparação e diagnóstico.
 
-> 💡 **Compatibility**: Built for and fully compatible with [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python).
+## Temas
 
----
-
-## ☕ Support & Buy Me a Coffee
-
-If you find these themes useful on your desk, feel free to support future updates! ☕
-
-[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?style=for-the-badge&logo=paypal)](https://paypal.me/NQT16)
-
-> **Donate via PayPal**: [https://paypal.me/NQT16](https://paypal.me/NQT16)
-
----
-
-## 🌟 Featured Custom Themes
-
-### 🌌 NOVA 01
-A sleek, modern dark-mode dashboard with pure obsidian background, smooth sans-serif clock typography, centered weather widget, and 5-day forecast.
-- **Pure Obsidian Aesthetics**: `#000000` pitch black background with `#0A0C12` charcoal card panels.
-- **Centered Weather & 5-Day Forecast**: Large weather icon, current temperature, high/low/humidity, and full 5-day forecast row (`THU`, `FRI`, `SAT`, `SUN`, `MON`).
-- **Gradient Glow Wave Graphs**: Hardware-accelerated glowing wave graphs for CPU, Temp, Uptime, and Processes.
-
-![NOVA 01 Live GIF Preview](res/themes/NOVA_01/preview_demo.gif)
-
----
-
-### 📊 TRUE VIEW 26
-A zero-duplication, highly balanced system monitoring theme designed for maximum readability.
-- **GPU / LOAD 1M / PROCS**: Middle row replaces redundant metrics with genuine GPU utilization, 1-minute OS load average, and active process count.
-- **Spacious Typography**: Fine-tuned font spacing preventing text overflow or cramped numbers.
-- **Full Card Breakdown**: Dedicated cards for CPU (with 60s history graph), RAM (GiB), SSD (GB), Fan RPM, Temperature, and Network throughput.
-
-![TRUE VIEW 26 Live GIF Preview](res/themes/TRUE_VIEW_26/preview_demo.gif)
-
----
-
-### ⚡ NEXUS 26
-A futuristic Cyberpunk-inspired neon theme featuring real-time visualizers and a dynamic health ring.
-- **Quantum Pulse Core**: Central health ring automatically classifies system state (`GOOD`, `HEAVY`, `MEMORY`, `DISK`, `HOT`).
-- **Smooth Wave Graphs**: Hardware-accelerated smooth filled gradient graphs for CPU and GPU.
-- **Live Dot-Matrix Equalizer**: Real-time per-core CPU load visualizer embedded in the top header.
-
-![NEXUS 26 Live GIF Preview](res/themes/NEXUS_26/preview_demo.gif)
-
----
-
-### 🍃 NEXUS MINIMAL
-A clean, lightweight, minimalist theme focusing on key performance indicators.
-- **High Efficiency**: Minimalist aesthetic with ultra-low CPU footprint.
-- **Essential Metrics**: Large digital clock, Uptime, CPU 60s history graph, RAM, SSD, Fan, Temp, Load, and Processes.
-
-![NEXUS MINIMAL Live GIF Preview](res/themes/NEXUS_MINIMAL/preview_demo.gif)
-
----
-
-### 🔷 APEX 01
-A premium dark-navy system monitoring dashboard with custom vector hardware icons, 5-column bottom utility bar, and live weather telemetry.
-- **Obsidian Navy Aesthetics**: High-contrast `#070B19` navy design with custom vector hardware icons.
-- **Spacious Weather Telemetry**: High/low temperature range and hollow cyan teardrop humidity stats with generous 8px gap separation.
-- **Full Utility Breakdown**: 5-column utility bar with Uptime, Network (MB/s), Wi-Fi SSID / Ethernet auto-detection, Temp history graph, and Fan RPM.
-
-![APEX 01 Live GIF Preview](res/themes/APEX_01/preview_demo.gif)
-
----
-
-## 💻 System Support & Testing Status
-
-| OS | Status | Notes |
+| Tema | Destaque | Prévia |
 |---|---|---|
-| **macOS (Apple Silicon M1/M2/M3/M4)** | ✅ **Fully Tested & Verified** | Uses `macmon` & `ioreg` for real GPU %, Fan RPM, and CPU/GPU °C |
-| **macOS (Intel)** | ✅ Supported | Standard sensors via `psutil` |
-| **Windows 10/11** | 🧪 **Installer Included** | Windows setup script included (`install-windows.ps1`); community feedback welcome! |
-| **Linux** | ✅ Supported | Native `psutil` sensor acquisition |
+| **APEX 01** | Data e clima em português; GPU e temperatura no lugar do cartão SSD, além de rede e Wi-Fi/Ethernet. | ![Prévia do APEX 01](res/themes/APEX_01/preview_demo.gif) |
+| **NOVA 01** | Interface escura, clima e previsão de cinco dias. | ![Prévia do NOVA 01](res/themes/NOVA_01/preview_demo.gif) |
+| **NEXUS 26** | Indicadores de saúde do sistema e gráficos de CPU/GPU. | ![Prévia do NEXUS 26](res/themes/NEXUS_26/preview_demo.gif) |
+| **NEXUS MINIMAL** | Layout minimalista com relógio e métricas essenciais. | ![Prévia do NEXUS MINIMAL](res/themes/NEXUS_MINIMAL/preview_demo.gif) |
+| **TRUE VIEW 26** | Painel de CPU, memória, disco, ventoinha e rede. | ![Prévia do TRUE VIEW 26](res/themes/TRUE_VIEW_26/preview_demo.gif) |
 
----
+Leituras de GPU, temperatura e ventoinha dependem dos sensores e drivers disponíveis; valores indisponíveis podem aparecer como `N/A`.
 
-## 📦 Quick Installation
+## Instalação e créditos
 
-### macOS
-1. Open Terminal and clone this repository:
-   ```bash
-   git clone https://github.com/thairc-dev/turing-smart-screen-custom-themes.git
-   cd turing-smart-screen-custom-themes
-   ```
-2. Run the automated installer script for your desired theme:
-   ```bash
-   # Install APEX 01 (Theme 5)
-   zsh res/themes/APEX_01/installers/install-macos.sh
-
-   # Or install NOVA 01
-   zsh res/themes/NOVA_01/installers/install-macos.sh
-
-   # Or install TRUE VIEW 26
-   zsh res/themes/TRUE_VIEW_26/installers/install-macos.sh
-
-   # Or install NEXUS 26
-   zsh res/themes/NEXUS_26/installers/install-macos.sh
-
-   # Or install NEXUS MINIMAL
-   zsh res/themes/NEXUS_MINIMAL/installers/install-macos.sh
-   ```
-
-### Windows (Powershell)
-Clone this repository and open PowerShell in its root directory. These themes
-run as standalone applications; they do not appear inside the Turing System
-Monitor theme list. Close that app and stop any other display theme before
-starting one, because only one process can own the screen connection at a time.
-The installer stops and disables the other showcase theme tasks while enabling
-the selected theme, so only that theme starts at the next logon. Run another
-theme's installer to switch later.
-
-```powershell
-git clone https://github.com/thairc-dev/turing-smart-screen-custom-themes.git
-Set-Location .\turing-smart-screen-custom-themes
-Set-ExecutionPolicy -Scope Process Bypass
-
-# Install APEX 01
-.\res\themes\APEX_01\installers\install-windows.ps1
-
-# Or install NOVA 01
-.\res\themes\NOVA_01\installers\install-windows.ps1
-
-# Or install TRUE VIEW 26
-.\res\themes\TRUE_VIEW_26\installers\install-windows.ps1
-
-# Or install NEXUS 26
-.\res\themes\NEXUS_26\installers\install-windows.ps1
-
-# Or install NEXUS MINIMAL
-.\res\themes\NEXUS_MINIMAL\installers\install-windows.ps1
-```
-
----
-
-## 🙏 Credits & Acknowledgments
-
-- **Core Project**: Built for and compatible with [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python) by [Matthieu Houdebine](https://github.com/mathoudebine).
-- **Sensors**: Thanks to `psutil`, `macmon` (Apple Silicon sensor reader by phoboslab), and `Pillow`.
-
----
-
-## 📄 License
-
-Distributed under the **GPL-3.0 License**. See `LICENSE` for details.
+Os instaladores do Windows ficam em `res\themes\<TEMA>\installers\install-windows.ps1` e configuram a inicialização do tema no logon. Para esse procedimento, consulte o [guia para assistentes de IA](GUIA_IA_WINDOWS.md). O projeto-base de comunicação com a tela é [turing-smart-screen-python](https://github.com/mathoudebine/turing-smart-screen-python). As licenças e atribuições dos componentes estão nos arquivos incluídos; consulte `LICENSE` para a licença principal.

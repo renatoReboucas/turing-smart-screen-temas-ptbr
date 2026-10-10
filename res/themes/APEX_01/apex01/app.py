@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 from pathlib import Path
 import sys
 import threading
@@ -15,6 +16,7 @@ from .transports import PreviewTransport, TransportError, connect_transport
 from .weather import WeatherCollector
 
 LOG = logging.getLogger(__name__)
+STOP_REQUEST = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "APEX01" / "stop.request"
 
 
 def setup_logging(verbose: bool = False) -> None:
@@ -24,6 +26,18 @@ def setup_logging(verbose: bool = False) -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%H:%M:%S",
     )
+
+
+def watch_stop_request(stop_event: threading.Event, stop_file: Path = STOP_REQUEST) -> None:
+    while not stop_event.wait(0.25):
+        try:
+            stop_file.unlink()
+        except FileNotFoundError:
+            continue
+        except OSError:
+            LOG.exception("Could not remove APEX shutdown request")
+        LOG.info("Shutdown requested via parar_tela.bat")
+        stop_event.set()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -122,10 +136,21 @@ def main(argv: list[str] | None = None) -> int:
     metrics = MetricsCollector(interval=config.display.stats_interval)
     weather = WeatherCollector(config.weather)
 
+    stop_event = threading.Event()
+    try:
+        STOP_REQUEST.unlink()
+    except FileNotFoundError:
+        pass
+
     metrics.start()
     weather.start()
 
-    stop_event = threading.Event()
+    threading.Thread(
+        target=watch_stop_request,
+        args=(stop_event,),
+        name="apex-shutdown-watcher",
+        daemon=True,
+    ).start()
 
     try:
         while not stop_event.is_set():
@@ -154,7 +179,7 @@ def main(argv: list[str] | None = None) -> int:
                     try:
                         transport.write(build_command(SCREEN_OFF))
                     except Exception:
-                        pass
+                        LOG.exception("Failed to turn off display during shutdown")
                     transport.close()
     except KeyboardInterrupt:
         LOG.info("Shutdown requested via KeyboardInterrupt")

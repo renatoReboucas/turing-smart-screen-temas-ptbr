@@ -255,6 +255,9 @@ class WindowsSensorSampler:
                 for hardware in self._lhm_computer.Hardware:
                     collect_hardware(hardware)
 
+                gpu_vram_used = []
+                gpu_vram_total = []
+
                 for hardware in hardware_nodes:
                     htype = hardware.HardwareType
                     for sensor in hardware.Sensors:
@@ -265,13 +268,19 @@ class WindowsSensorSampler:
                         val = float(sensor.Value)
 
                         if htype == Hardware.HardwareType.Cpu:
-                            if stype == Hardware.SensorType.Temperature and ("package" in sname or "average" in sname or "core" in sname):
+                            if stype == Hardware.SensorType.Temperature:
                                 cpu_temps.append(val)
                         elif htype in (Hardware.HardwareType.GpuNvidia, Hardware.HardwareType.GpuAmd, Hardware.HardwareType.GpuIntel):
-                            if stype == Hardware.SensorType.Temperature and ("core" in sname or "gpu" in sname):
+                            if stype == Hardware.SensorType.Temperature:
                                 gpu_temps.append(val)
-                            elif stype == Hardware.SensorType.Load and ("core" in sname or "gpu" in sname):
+                            elif stype == Hardware.SensorType.Load:
                                 gpu_loads.append(val)
+                            elif stype in (Hardware.SensorType.Data, Hardware.SensorType.SmallData):
+                                name_lower = sname
+                                if "used" in name_lower and ("memory" in name_lower or "vram" in name_lower or "gpu" in name_lower):
+                                    gpu_vram_used.append(val)
+                                elif "total" in name_lower and ("memory" in name_lower or "vram" in name_lower or "gpu" in name_lower):
+                                    gpu_vram_total.append(val)
                         elif stype == Hardware.SensorType.Fan and val > 0:
                             fan_rpms.append(int(val))
 
@@ -279,13 +288,17 @@ class WindowsSensorSampler:
                 gpu_temp = float(sum(gpu_temps) / len(gpu_temps)) if gpu_temps else None
                 gpu_load = float(sum(gpu_loads) / len(gpu_loads)) if gpu_loads else None
                 fan_rpm = int(sum(fan_rpms) / len(fan_rpms)) if fan_rpms else None
+                gpu_vram_used_val = float(sum(gpu_vram_used) / len(gpu_vram_used)) / 1024.0 if gpu_vram_used else None
+                gpu_vram_total_val = float(sum(gpu_vram_total) / len(gpu_vram_total)) / 1024.0 if gpu_vram_total else None
 
                 if gpu_load is None:
                     LOG.info("LibreHardwareMonitor is active but exposes no GPU load sensor")
                 if fan_rpm is None:
                     LOG.info("LibreHardwareMonitor is active but exposes no fan RPM sensor")
+                if gpu_vram_used_val is None or gpu_vram_total_val is None:
+                    LOG.debug("LibreHardwareMonitor did not expose usable GPU VRAM sensors")
 
-                return gpu_load, cpu_temp, gpu_temp, fan_rpm, None, None
+                return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used_val, gpu_vram_total_val
             except Exception as exc:
                 LOG.warning("LHM snapshot error: %s", exc)
                 return None, None, None, None, None, None
@@ -318,6 +331,24 @@ class WindowsSensorSampler:
                 mem = pynvml.nvmlDeviceGetMemoryInfo(handle)
                 gpu_vram_used = float(mem.used) / 1024**3
                 gpu_vram_total = float(mem.total) / 1024**3
+            except Exception:
+                pass
+
+        if gpu_vram_used is None or gpu_vram_total is None:
+            try:
+                import subprocess
+                out = subprocess.check_output(
+                    ["nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,noheader,nounits"],
+                    text=True,
+                    timeout=1,
+                )
+                parts = [p.strip() for p in out.strip().split(",")]
+                if len(parts) >= 2:
+                    try:
+                        gpu_vram_used = float(parts[0]) / 1024.0
+                        gpu_vram_total = float(parts[1]) / 1024.0
+                    except ValueError:
+                        pass
             except Exception:
                 pass
 

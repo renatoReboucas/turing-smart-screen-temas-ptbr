@@ -371,11 +371,6 @@ def render_frame(
     gpu_percent_str = "N/A" if snapshot.gpu_percent is None else f"{snapshot.gpu_percent:.0f}%"
     gpu_color = BLUE if snapshot.gpu_percent is not None else (140, 140, 140)
     d.text((264, 192), gpu_percent_str, fill=gpu_color, font=fBigVal)
-    gpu_vram_val = "N/A"
-    if snapshot.gpu_vram_total_gb and snapshot.gpu_vram_total_gb > 0:
-        gpu_vram_used = snapshot.gpu_vram_used_gb or 0.0
-        gpu_vram_val = f"{gpu_vram_used:.1f}/{snapshot.gpu_vram_total_gb:.0f}G"
-    d.text((264, 224), f"VRAM {gpu_vram_val}", fill=(160, 191, 255), font=fNano)
     draw_10_segment_rgb_pill_bar(
         d,
         [348, 202, 454, 224],
@@ -487,20 +482,18 @@ def render_frame(
     draw_thermometer_icon(d, 296, 258, ORANGE)
     d.text((324, 258), "TEMP", fill=WHITE, font=fMedium)
     cpu_temp = "--" if snapshot.cpu_temp_c is None else f"{snapshot.cpu_temp_c:.0f}°C"
-    d.text((324, 270), cpu_temp, fill=ORANGE, font=fHeaderTime)
+    d.text((324, 270), cpu_temp, fill=ORANGE, font=fMedium)
     draw_mini_wave_graph(d, [294, 298, 372, 306], temp_history, line_color=ORANGE)
 
     # Column 5: VRAM (X=380..468, Start X=415)
-    draw_ram_stick_icon(d, 388, 268, PURPLE)
     d.text((415, 258), "VRAM", fill=WHITE, font=fMedium)
     vram_total = snapshot.gpu_vram_total_gb
     if vram_total is None or vram_total <= 0:
-        d.text((415, 270), "N/A", fill=(140, 140, 140), font=fMicro)
-        d.text((415, 290), "NO SENSOR", fill=(120, 120, 120), font=fNano)
+        d.text((415, 274), "N/A", fill=(140, 140, 140), font=fMedium)
     else:
         vram_used = snapshot.gpu_vram_used_gb or 0.0
         vram_percent = min(100.0, (vram_used / vram_total) * 100.0)
-        d.text((415, 268), f"{vram_used:.1f}/{vram_total:.0f}G", fill=WHITE, font=fMicro)
+        d.text((415, 270), f"{vram_used:.1f}/{vram_total:.0f}G", fill=WHITE, font=fMedium)
         d.text((415, 288), f"{vram_percent:.0f}%", fill=(160, 190, 220), font=fNano)
 
     return image
@@ -531,15 +524,15 @@ def render_session(
     try:
         fTitle = ImageFont.truetype(str(bold_font), 14)
         fClock = ImageFont.truetype(str(black_font), 64)
-        fHeaderTime = ImageFont.truetype(str(bold_font), 14)
+        fHeaderTime = ImageFont.truetype(str(bold_font), 15)
         fBigVal = ImageFont.truetype(str(black_font), 34)
         fWeatherTemp = ImageFont.truetype(str(black_font), 30)
-        fWeatherCond = ImageFont.truetype(str(bold_font), 10)
-        fCardVal = ImageFont.truetype(str(bold_font), 11)
-        fMedium = ImageFont.truetype(str(bold_font), 10)
+        fWeatherCond = ImageFont.truetype(str(bold_font), 11)
+        fCardVal = ImageFont.truetype(str(bold_font), 12)
+        fMedium = ImageFont.truetype(str(bold_font), 11)
         fSmall = ImageFont.truetype(str(regular_font), 10)
-        fMicro = ImageFont.truetype(str(bold_font), 9)
-        fNano = ImageFont.truetype(str(regular_font), 8)
+        fMicro = ImageFont.truetype(str(bold_font), 10)
+        fNano = ImageFont.truetype(str(regular_font), 9)
     except OSError as exc:
         LOG.warning("Could not load bundled fonts: %s", exc)
         fTitle = fClock = fHeaderTime = fBigVal = fWeatherTemp = fWeatherCond = fCardVal = fMedium = fSmall = fMicro = fNano = ImageFont.load_default()
