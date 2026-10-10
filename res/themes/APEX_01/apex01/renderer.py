@@ -102,19 +102,16 @@ def draw_ram_stick_icon(draw, x, y, color=PURPLE):
         draw.line([(pin_x, cy + 9), (pin_x, cy + 14)], fill=color, width=2)
 
 
-def draw_ssd_drive_icon(draw, x, y, color=BLUE, font_micro=None):
-    # Standardized 32x32 SSD Drive Icon centered at (x+16, y+16)
+def draw_gpu_card_icon(draw, x, y, color=BLUE):
     cx, cy = x + 16, y + 16
-    # Outer SSD Drive Enclosure 26x30
-    draw.rectangle([cx - 13, cy - 15, cx + 13, cy + 15], outline=color, width=2)
-    # Controller / Label Area 20x14
-    draw.rectangle([cx - 10, cy - 11, cx + 10, cy + 3], outline=color, width=1)
-    if font_micro:
-        w_ssd = draw.textlength("SSD", font=font_micro)
-        draw.text((round(cx - w_ssd / 2), cy - 9), "SSD", fill=color, font=font_micro)
-    # 2 Bottom Screw/SATA Ports
-    draw.ellipse([cx - 8, cy + 7, cx - 4, cy + 11], fill=color)
-    draw.ellipse([cx + 4, cy + 7, cx + 8, cy + 11], fill=color)
+    draw.rounded_rectangle([cx - 14, cy - 10, cx + 14, cy + 10], radius=2, outline=color, width=2)
+    draw.ellipse([cx - 7, cy - 7, cx + 7, cy + 7], outline=color, width=1)
+    draw.ellipse([cx - 2, cy - 2, cx + 2, cy + 2], fill=color)
+    draw.line([(cx - 4, cy - 5), (cx - 1, cy - 2)], fill=color, width=1)
+    draw.line([(cx + 5, cy - 3), (cx + 2, cy - 1)], fill=color, width=1)
+    draw.line([(cx - 2, cy + 5), (cx - 1, cy + 2)], fill=color, width=1)
+    for pin_x in (cx - 9, cx - 3, cx + 3, cx + 9):
+        draw.line([(pin_x, cy + 10), (pin_x, cy + 14)], fill=color, width=1)
 
 
 def draw_clock_circle_icon(draw, x, y, color=CYAN):
@@ -361,20 +358,25 @@ def render_frame(
     d.text((454 - w_ram, 94), ram_str, fill=WHITE, font=fMedium)
     draw_10_segment_rgb_pill_bar(d, [348, 122, 454, 144], rp, active_color=PURPLE)
 
-    # SSD Card
+    # GPU Card
     d.rounded_rectangle([196, 170, 468, 240], radius=6, fill=(11, 21, 48), outline=BORDER, width=1)
     d.rounded_rectangle([196, 170, 202, 240], radius=3, fill=BLUE) # Solid left accent strip
-    draw_ssd_drive_icon(d, 212, 189, BLUE, font_micro=fMicro)
+    draw_gpu_card_icon(d, 212, 189, BLUE)
     d.line([(254, 174), (254, 236)], fill=BORDER, width=1)
-    d.text((264, 174), "SSD", fill=WHITE, font=fTitle)
-    dp = int(snapshot.disk_percent)
-    du = snapshot.disk_used_gb
-    dt2 = snapshot.disk_total_gb
-    ssd_str = f"{du:.0f} / {dt2:.0f} GB"
-    d.text((264, 192), f"{dp}%", fill=BLUE, font=fBigVal)
-    w_ssd = d.textlength(ssd_str, font=fMedium)
-    d.text((454 - w_ssd, 174), ssd_str, fill=WHITE, font=fMedium)
-    draw_10_segment_rgb_pill_bar(d, [348, 202, 454, 224], dp, active_color=BLUE)
+    d.text((264, 174), "GPU", fill=WHITE, font=fTitle)
+    gpu_temp_str = "N/A" if snapshot.gpu_temp_c is None else f"{snapshot.gpu_temp_c:.0f}°C"
+    d.text((386, 178), "TEMP", fill=(148, 163, 184), font=fNano)
+    w_gpu_temp = d.textlength(gpu_temp_str, font=fMedium)
+    d.text((454 - w_gpu_temp, 174), gpu_temp_str, fill=WHITE, font=fMedium)
+    gpu_percent_str = "N/A" if snapshot.gpu_percent is None else f"{snapshot.gpu_percent:.0f}%"
+    gpu_color = BLUE if snapshot.gpu_percent is not None else (140, 140, 140)
+    d.text((264, 192), gpu_percent_str, fill=gpu_color, font=fBigVal)
+    draw_10_segment_rgb_pill_bar(
+        d,
+        [348, 202, 454, 224],
+        snapshot.gpu_percent if snapshot.gpu_percent is not None else 0,
+        active_color=BLUE,
+    )
 
     # ── 2. TOP LEFT HEADER & GIANT DIGITAL CLOCK ──
     draw_display_icon(d, 14, 12, GOLD)
@@ -391,9 +393,10 @@ def render_frame(
     d.line([(16, 122), (184, 122)], fill=BORDER, width=1)
 
     # Date Row
-    day_abbr = time.strftime("%a").upper()
-    day_num = time.strftime("%d")
-    month_name = time.strftime("%b").upper()
+    now = time.localtime()
+    day_abbr = ("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")[now.tm_wday]
+    day_num = time.strftime("%d", now)
+    month_name = ("JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ")[now.tm_mon - 1]
     year_str = time.strftime("%Y")
 
     w1 = d.textlength(day_abbr, font=fHeaderTime)

@@ -1,5 +1,15 @@
 # 🚀 TURZX 3.5" Smart Display - Ultimate Custom Themes
 
+## Versão em português (Brasil)
+
+Este repositório reúne cinco temas independentes para telas TURZX/Turing de 3,5" (480 × 320): **APEX 01**, **NOVA 01**, **NEXUS 26**, **NEXUS MINIMAL** e **TRUE VIEW 26**. Eles se comunicam diretamente com a tela; não aparecem na lista de temas do aplicativo Turing System Monitor.
+
+No **APEX 01**, a data e as condições meteorológicas foram traduzidas para português. O cartão SSD foi substituído por uso e temperatura da GPU; esses valores dependem dos sensores disponíveis no computador e podem aparecer como `N/A`.
+
+Para instalar no Windows e configurar a inicialização automática, consulte o [guia para assistentes de IA](GUIA_IA_WINDOWS.md). O código e os créditos dos autores originais foram preservados. Esta coleção não é afiliada à Turing/TURZX.
+
+---
+
 A collection of high-performance, deduplicated, beautifully designed custom themes for **TURZX / Turing 3.5-inch USB Smart Displays** (480x320 resolution). Built with standalone Python renderers, native Apple Silicon (`macmon` & `ioreg`) sensor integration, and cross-platform support.
 
 Created by [thairc-dev](https://github.com/thairc-dev) (author of [mac-server-mode](https://github.com/thairc-dev/mac-server-mode)).
