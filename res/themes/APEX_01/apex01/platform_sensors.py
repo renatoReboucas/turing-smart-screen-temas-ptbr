@@ -154,12 +154,15 @@ class WindowsSensorSampler:
         self._wmi_handle = None
         self._lock = threading.Lock()
         self._cpu_temp_status: bool | None = None
+        self._nvidia_smi_path = shutil.which("nvidia-smi")
 
     def start(self) -> None:
         LOG.info(
             "Windows hardware sensor process elevated: %s",
             bool(ctypes.windll.shell32.IsUserAnAdmin()),
         )
+        if self._nvidia_smi_path:
+            LOG.info("NVIDIA GPU telemetry enabled using %s", self._nvidia_smi_path)
         # 1. Try LibreHardwareMonitorLib.dll via pythonnet / clr
         try:
             import clr
@@ -305,6 +308,13 @@ class WindowsSensorSampler:
                 fan_rpm = int(sum(fan_rpms) / len(fan_rpms)) if fan_rpms else None
                 gpu_vram_used_val = float(sum(gpu_vram_used) / len(gpu_vram_used)) / 1024.0 if gpu_vram_used else None
                 gpu_vram_total_val = float(sum(gpu_vram_total) / len(gpu_vram_total)) / 1024.0 if gpu_vram_total else None
+                nvidia_metrics = self._snapshot_nvidia_smi()
+                if nvidia_metrics is not None:
+                    nvidia_load, nvidia_temp, nvidia_vram_used, nvidia_vram_total = nvidia_metrics
+                    gpu_load = nvidia_load
+                    gpu_temp = nvidia_temp
+                    gpu_vram_used_val = nvidia_vram_used
+                    gpu_vram_total_val = nvidia_vram_total
 
                 if gpu_load is None:
                     LOG.info("LibreHardwareMonitor is active but exposes no GPU load sensor")
@@ -344,8 +354,12 @@ class WindowsSensorSampler:
         gpu_vram_used = None
         gpu_vram_total = None
 
+        nvidia_metrics = self._snapshot_nvidia_smi()
+        if nvidia_metrics is not None:
+            gpu_load, gpu_temp, gpu_vram_used, gpu_vram_total = nvidia_metrics
+
         # GPU via pynvml
-        if self._nvml_active:
+        if self._nvml_active and gpu_load is None:
             try:
                 import pynvml
                 handle = pynvml.nvmlDeviceGetHandleByIndex(0)
@@ -355,24 +369,6 @@ class WindowsSensorSampler:
                 mem = pynvml.nvmlDeviceGetMemoryInfo(handle)
                 gpu_vram_used = float(mem.used) / 1024**3
                 gpu_vram_total = float(mem.total) / 1024**3
-            except Exception:
-                pass
-
-        if gpu_vram_used is None or gpu_vram_total is None:
-            try:
-                import subprocess
-                out = subprocess.check_output(
-                    ["nvidia-smi", "--query-gpu=memory.used,memory.total", "--format=csv,noheader,nounits"],
-                    text=True,
-                    timeout=1,
-                )
-                parts = [p.strip() for p in out.strip().split(",")]
-                if len(parts) >= 2:
-                    try:
-                        gpu_vram_used = float(parts[0]) / 1024.0
-                        gpu_vram_total = float(parts[1]) / 1024.0
-                    except ValueError:
-                        pass
             except Exception:
                 pass
 
@@ -424,6 +420,33 @@ class WindowsSensorSampler:
             LOG.info("No supported Windows fan RPM sensor found; fan speed will display N/A")
 
         return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used, gpu_vram_total
+
+    def _snapshot_nvidia_smi(self) -> tuple[float, float, float, float] | None:
+        if not self._nvidia_smi_path:
+            return None
+        try:
+            output = subprocess.check_output(
+                [
+                    self._nvidia_smi_path,
+                    "--query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total",
+                    "--format=csv,noheader,nounits",
+                ],
+                text=True,
+                timeout=1,
+            )
+            values = [value.strip() for value in output.splitlines()[0].split(",")]
+            if len(values) != 4:
+                return None
+            gpu_load, gpu_temp, vram_used_mb, vram_total_mb = map(float, values)
+            return (
+                max(0.0, min(100.0, gpu_load)),
+                gpu_temp,
+                vram_used_mb / 1024.0,
+                vram_total_mb / 1024.0,
+            )
+        except (FileNotFoundError, IndexError, ValueError, subprocess.SubprocessError) as exc:
+            LOG.debug("Could not read NVIDIA telemetry with nvidia-smi: %s", exc)
+            return None
 
 
 def _select_cpu_temperature(readings: list[tuple[str, float]]) -> float | None:
