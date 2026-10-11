@@ -15,7 +15,7 @@ class DisplayConfig:
     height: int = 320
     brightness: int = 100
     fps: float = 10.0
-    stats_interval: float = 0.8
+    stats_interval: float = 0.5
     reconnect_interval: float = 3.0
     clean_on_startup: bool = True
 
@@ -68,7 +68,7 @@ class AppConfig:
                 height=int(display_raw.get("height", 320)),
                 brightness=int(display_raw.get("brightness", 100)),
                 fps=float(display_raw.get("fps", 10.0)),
-                stats_interval=float(display_raw.get("stats_interval", 0.8)),
+                stats_interval=float(display_raw.get("stats_interval", 0.5)),
                 reconnect_interval=float(display_raw.get("reconnect_interval", 3.0)),
                 clean_on_startup=bool(display_raw.get("clean_on_startup", True)),
             ),
