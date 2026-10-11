@@ -45,8 +45,8 @@ class MetricsSnapshot:
     uptime_seconds: int = 0
     warning: bool = False
     health_status: str = "GOOD"
-    health_line1: str = "All systems"
-    health_line2: str = "operational"
+    health_line1: str = "Todos os sistemas"
+    health_line2: str = "operacionais"
 
 
 def detect_system_info() -> SystemInfo:
@@ -87,14 +87,14 @@ def classify_health(
 ) -> tuple[str, str, str]:
     hottest = max(value for value in (cpu_temp_c, gpu_temp_c, 0.0) if value is not None)
     if hottest >= 95:
-        return "HOT", "Thermal limit", "approaching"
+        return "HOT", "Limite térmico", "próximo"
     if cpu_percent >= 95 or (gpu_percent is not None and gpu_percent >= 95):
-        return "HEAVY", "Resource load", "elevated"
+        return "HEAVY", "Carga do sistema", "elevada"
     if ram_percent >= 95:
-        return "MEMORY", "Memory use", "critically high"
+        return "MEMORY", "Uso da memória", "muito alto"
     if disk_percent >= 90:
-        return "DISK", "Free space", "running low"
-    return "GOOD", "All systems", "operational"
+        return "DISK", "Espaço em disco", "baixo"
+    return "GOOD", "Todos os sistemas", "operacionais"
 
 
 def network_rate_mb_s(current_bytes: int, previous_bytes: int, elapsed: float) -> float:

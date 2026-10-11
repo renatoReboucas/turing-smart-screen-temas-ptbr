@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ctypes
 import json
 import logging
 import os
@@ -152,9 +153,13 @@ class WindowsSensorSampler:
         self._nvml_active = False
         self._wmi_handle = None
         self._lock = threading.Lock()
-        self.start()
+        self._cpu_temp_status: bool | None = None
 
     def start(self) -> None:
+        LOG.info(
+            "Windows hardware sensor process elevated: %s",
+            bool(ctypes.windll.shell32.IsUserAnAdmin()),
+        )
         # 1. Try LibreHardwareMonitorLib.dll via pythonnet / clr
         try:
             import clr
@@ -173,6 +178,16 @@ class WindowsSensorSampler:
                 clr.AddReference(hid_dll)
                 clr.AddReference(lhm_dll)
                 from LibreHardwareMonitor import Hardware
+                from LibreHardwareMonitor.PawnIo import PawnIo
+
+                if PawnIo.IsInstalled:
+                    LOG.info("PawnIO hardware access driver is installed (version %s)", PawnIo.Version)
+                else:
+                    LOG.warning(
+                        "PawnIO hardware access driver is missing; AMD CPU temperature may read 0 C. "
+                        "Run configurar_inicio_apex.bat to install the sensor driver."
+                    )
+
                 computer = Hardware.Computer()
                 computer.IsCpuEnabled = True
                 computer.IsGpuEnabled = True
@@ -239,7 +254,7 @@ class WindowsSensorSampler:
         with self._lock:
             try:
                 from LibreHardwareMonitor import Hardware
-                cpu_temps = []
+                cpu_temps: list[tuple[str, float]] = []
                 gpu_temps = []
                 gpu_loads = []
                 fan_rpms = []
@@ -269,7 +284,7 @@ class WindowsSensorSampler:
 
                         if htype == Hardware.HardwareType.Cpu:
                             if stype == Hardware.SensorType.Temperature:
-                                cpu_temps.append(val)
+                                cpu_temps.append((sname, val))
                         elif htype in (Hardware.HardwareType.GpuNvidia, Hardware.HardwareType.GpuAmd, Hardware.HardwareType.GpuIntel):
                             if stype == Hardware.SensorType.Temperature:
                                 gpu_temps.append(val)
@@ -284,7 +299,7 @@ class WindowsSensorSampler:
                         elif stype == Hardware.SensorType.Fan and val > 0:
                             fan_rpms.append(int(val))
 
-                cpu_temp = float(sum(cpu_temps) / len(cpu_temps)) if cpu_temps else None
+                cpu_temp = _select_cpu_temperature(cpu_temps)
                 gpu_temp = float(sum(gpu_temps) / len(gpu_temps)) if gpu_temps else None
                 gpu_load = float(sum(gpu_loads) / len(gpu_loads)) if gpu_loads else None
                 fan_rpm = int(sum(fan_rpms) / len(fan_rpms)) if fan_rpms else None
@@ -297,6 +312,15 @@ class WindowsSensorSampler:
                     LOG.info("LibreHardwareMonitor is active but exposes no fan RPM sensor")
                 if gpu_vram_used_val is None or gpu_vram_total_val is None:
                     LOG.debug("LibreHardwareMonitor did not expose usable GPU VRAM sensors")
+                if cpu_temp is None and self._cpu_temp_status is not False:
+                    LOG.warning(
+                        "No valid CPU temperature sensor is available; readings: %s",
+                        cpu_temps,
+                    )
+                    self._cpu_temp_status = False
+                elif cpu_temp is not None and self._cpu_temp_status is not True:
+                    LOG.info("CPU temperature sensor available: %.1f C", cpu_temp)
+                    self._cpu_temp_status = True
 
                 return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used_val, gpu_vram_total_val
             except Exception as exc:
@@ -400,6 +424,19 @@ class WindowsSensorSampler:
             LOG.info("No supported Windows fan RPM sensor found; fan speed will display N/A")
 
         return gpu_load, cpu_temp, gpu_temp, fan_rpm, gpu_vram_used, gpu_vram_total
+
+
+def _select_cpu_temperature(readings: list[tuple[str, float]]) -> float | None:
+    valid_readings = [(name, value) for name, value in readings if 0 < value < 150]
+    if not valid_readings:
+        return None
+    package_readings = [
+        value
+        for name, value in valid_readings
+        if any(label in name for label in ("tctl/tdie", "cpu package", "package"))
+    ]
+    selected = package_readings or [value for _, value in valid_readings]
+    return sum(selected) / len(selected)
 
 
 class LinuxSensorSampler:

@@ -1,13 +1,15 @@
 # NEXUS MINIMAL
 
-A clean, focused theme for TURZX/Turing 3.5-inch 480×320 displays, with green,
-purple, blue, orange and yellow accents. Every number and graph point comes
-from a real system metric; missing sensors are shown as `N/A`.
+Tema limpo e objetivo para telas TURZX/Turing de 3,5 polegadas e resolução
+480×320, com detalhes em verde, roxo, azul, laranja e amarelo. Todos os números
+e pontos dos gráficos vêm de métricas reais do sistema; sensores indisponíveis
+aparecem como `N/A`.
 
-`LOAD` is the operating system's raw one-minute load average. `PROCS` is the
-total process count; it is deliberately labelled `TOTAL`, not `RUNNING`.
+`CARGA` mostra a média de carga bruta de um minuto fornecida pelo sistema
+operacional. `PROC.` mostra o total de processos e é identificado como `TOTAL`,
+não como processos em execução.
 
-## Preview
+## Prévia
 
 ```bash
 python3 -m venv .venv
@@ -21,32 +23,33 @@ PYTHONPATH=. .venv/bin/python -m nexusminimal --preview preview.png
 ./installers/install-macos.sh
 ```
 
-The installer creates a private environment in
-`~/Library/Application Support/NEXUSMINIMAL` and registers
+O instalador cria um ambiente isolado em
+`~/Library/Application Support/NEXUSMINIMAL` e registra
 `com.nexusminimal.display`.
 
 ## Windows
 
-Run PowerShell:
+Execute pelo PowerShell:
 
 ```powershell
 .\installers\install-windows.ps1
 ```
 
-This installs under `%LOCALAPPDATA%\NEXUSMINIMAL` and registers the
-`NEXUSMINIMAL Display` scheduled task.
+O tema é instalado em `%LOCALAPPDATA%\NEXUSMINIMAL` e registrado como tarefa
+agendada `NEXUSMINIMAL Display`.
 
-## Configuration
+## Configuração
 
-- `device.transport: auto` uses libusb on macOS and serial/COM elsewhere.
-- `device.port: AUTO` scans compatible Windows/Linux serial devices.
-- `metrics.network_interface: auto` follows the default internet route.
-- The serial number and USB identifiers prevent unrelated devices from being
-  selected by default.
+- `device.transport: auto` usa libusb no macOS e serial/COM nos demais sistemas.
+- `device.port: AUTO` procura dispositivos seriais compatíveis no Windows/Linux.
+- `metrics.network_interface: auto` acompanha a rota de internet padrão.
+- O número de série e os identificadores USB evitam selecionar outros
+  dispositivos por padrão.
 
-See [METRICS.md](METRICS.md) for definitions, units and fallbacks.
+Consulte [METRICS.md](METRICS.md) para definições, unidades e alternativas de
+leitura.
 
-## Tests
+## Testes
 
 ```bash
 PYTHONPATH=. python3 -m unittest discover -s tests -v

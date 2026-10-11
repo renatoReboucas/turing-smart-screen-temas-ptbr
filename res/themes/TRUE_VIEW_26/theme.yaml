@@ -13,9 +13,9 @@ display:
   DISPLAY_RGB_LED: 255, 255, 255
 
 metrics:
-  - CPU utilization, frequency and temperature
-  - RAM utilization and GiB
-  - APFS/container-aware storage utilization and GB
-  - Fan RPM
-  - Default-route network throughput
-  - System uptime, model, OS, clock and date
+  - Uso, frequência e temperatura da CPU
+  - Uso da RAM em GiB
+  - Uso do armazenamento com suporte a contêiner APFS, em GB
+  - Rotação das ventoinhas (RPM)
+  - Tráfego de rede pela rota padrão
+  - Tempo ligado, modelo, sistema operacional, hora e data

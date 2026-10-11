@@ -23,6 +23,13 @@ from .transports.base import DisplayTransport
 
 LOG = logging.getLogger(__name__)
 W, H = 480, 320
+DAYS_PTBR = ("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
+MONTHS_PTBR = ("JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ")
+
+
+def format_local_date(now=None) -> str:
+    now = now or time.localtime()
+    return f"{DAYS_PTBR[now.tm_wday]} {now.tm_mday:02d} {MONTHS_PTBR[now.tm_mon - 1]} {now.tm_year}"
 
 BG = (5, 7, 9)
 PANEL = (9, 12, 15)
@@ -221,8 +228,8 @@ def format_uptime(seconds):
 
 def format_fan(rpm):
     if rpm is None:
-        return "N/A", "NO SENSOR"
-    return f"{rpm} RPM", "SILENT" if rpm == 0 else "ACTIVE"
+        return "N/A", "SEM SENSOR"
+    return f"{rpm} RPM", "PARADA" if rpm == 0 else "ATIVA"
 
 
 def format_temperature(snapshot):
@@ -256,7 +263,7 @@ def render_frame(
     draw.text((58, 12), display_model_name(system_info, 24), font=f13, fill=WHITE)
     draw.text((58, 29), system_info.os_version, font=f9, fill=MUTED)
     draw_wifi(draw, 437, 15, bool(snapshot.network_interface))
-    draw.text((268, 20), "NET", font=f9, fill=MUTED)
+    draw.text((268, 20), "REDE", font=f9, fill=MUTED)
     draw.line([(298, 14), (298, 39)], fill=BORDER)
     draw_arrow(draw, 308, 15, "up", GREEN)
     draw.text((325, 11), format_rate(snapshot.net_up_mb_s), font=f12, fill=GREEN)
@@ -267,13 +274,13 @@ def render_frame(
 
     # Large clock, uptime and the same real CPU history used by the CPU card.
     draw_pixel_clock(draw, 25, 56, time.strftime("%H:%M"), scale=7)
-    draw.text((27, 111), time.strftime("%a %d %b %Y").upper(), font=f13, fill=WHITE)
+    draw.text((27, 111), format_local_date(), font=f13, fill=WHITE)
     draw.line([(26, 136), (238, 136)], fill=BORDER)
-    draw.text((27, 149), "UPTIME", font=f9, fill=GREEN)
+    draw.text((27, 149), "LIGADO", font=f9, fill=GREEN)
     draw.text((27, 166), format_uptime(snapshot.uptime_seconds), font=f12, fill=WHITE)
     draw.line([(130, 149), (130, 211)], fill=BORDER)
     draw_line_graph(draw, (142, 153, 238, 192), cpu_history, grid=True, color=GREEN)
-    _text_right(draw, 238, 196, "60 SEC", f9, MUTED)
+    _text_right(draw, 238, 196, "60 SEG", f9, MUTED)
 
     # Right cards.
     cpu_box = (248, 54, 468, 108)
@@ -323,24 +330,24 @@ def render_frame(
         draw.rounded_rectangle(box, radius=6, fill=PANEL, outline=BORDER)
     fan_value, fan_status = format_fan(snapshot.fan_rpm)
     draw_fan(draw, 24, 249, MUTED)
-    draw.text((59, 241), "FAN", font=f9, fill=MUTED)
+    draw.text((59, 241), "VENT.", font=f9, fill=MUTED)
     draw.text((59, 256), fan_value, font=f11, fill=WHITE)
     draw.text((59, 274), fan_status, font=f8, fill=MUTED)
 
     draw_thermometer(draw, 141, 249, MUTED)
-    draw.text((176, 241), "TEMP", font=f9, fill=MUTED)
+    draw.text((176, 241), "TEMP.", font=f9, fill=MUTED)
     temperature = format_temperature(snapshot)
     draw.text((176, 256), temperature, font=f13, fill=ORANGE if temperature != "N/A" else MUTED)
 
     draw.line([(258, 260), (268, 260), (273, 252), (278, 268), (283, 256), (290, 260)], fill=MUTED)
-    draw.text((291, 241), "LOAD", font=f9, fill=MUTED)
+    draw.text((291, 241), "CARGA", font=f9, fill=MUTED)
     load_text = "N/A" if snapshot.load_average_1m is None else f"{snapshot.load_average_1m:.2f}"
     draw.text((291, 256), load_text, font=f16, fill=YELLOW)
-    draw.text((291, 277), "1m avg", font=f8, fill=MUTED)
+    draw.text((291, 277), "MÉDIA 1M", font=f8, fill=MUTED)
 
     draw.rectangle([371, 249, 392, 266], outline=MUTED)
     draw.text((375, 251), ">_", font=f9, fill=BLUE)
-    draw.text((401, 241), "PROCS", font=f9, fill=MUTED)
+    draw.text((401, 241), "PROC.", font=f9, fill=MUTED)
     draw.text((401, 256), str(snapshot.process_count), font=f16, fill=BLUE)
     draw.text((401, 277), "TOTAL", font=f8, fill=MUTED)
     return image

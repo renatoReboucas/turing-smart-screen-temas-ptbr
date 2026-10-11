@@ -66,8 +66,8 @@ class TrueView26Tests(unittest.TestCase):
         self.assertEqual(format_uptime(1000 * 86400), "2.7y 0h")
 
     def test_weather_descriptions_are_meaningful_and_fit(self) -> None:
-        self.assertEqual(compact_condition("Partly cloudy"), ("PARTLY CLOUDY", "partly_cloudy"))
-        self.assertEqual(compact_condition("Light rain shower"), ("RAIN", "rain"))
+        self.assertEqual(compact_condition("Partly cloudy"), ("NUBL. PARC.", "partly_cloudy"))
+        self.assertEqual(compact_condition("Light rain shower"), ("CHUVA", "rain"))
 
     def test_startup_cleanse_ends_on_full_black_frame(self) -> None:
         display = PreviewTransport()

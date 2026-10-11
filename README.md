@@ -4,6 +4,11 @@ Coleção de cinco temas independentes para telas USB de 480 × 320: **APEX 01**
 
 Este repositório é uma adaptação de [turing-smart-screen-custom-themes](https://github.com/thairc-dev/turing-smart-screen-custom-themes). Os créditos e avisos de licença dos autores originais foram mantidos. Este projeto não é afiliado à Turing/TURZX.
 
+> **Importante — temperatura Ryzen no APEX 01 (Windows):** é necessário instalar
+> o driver PawnIO e executar o tema com acesso elevado. Use
+> `.\instalar_pawnio.bat` para instalar e validar o driver; consulte a seção
+> [PawnIO e temperatura do Ryzen](#pawnio-e-temperatura-do-ryzen) para instruções.
+
 ## Executar no Windows 11
 
 Abra o PowerShell na pasta do repositório. Feche o Turing System Monitor e qualquer outro programa que esteja usando a tela. Execute apenas um tema por vez:
@@ -17,6 +22,28 @@ Abra o PowerShell na pasta do repositório. Feche o Turing System Monitor e qual
 | TRUE VIEW 26 | `.\run_TRUE_VIEW_26.bat` |
 
 Para iniciar usando o lançador genérico: `.\run_theme.bat APEX_01` (substitua `APEX_01` por `NEXUS_26`, `NEXUS_MINIMAL`, `NOVA_01` ou `TRUE_VIEW_26`). Para encerrar o APEX 01 e solicitar que a tela desligue: `.\parar_tela.bat`. Para parar outro tema, pressione `Ctrl+C` no terminal em que ele está rodando.
+
+### PawnIO e temperatura do Ryzen
+
+No Windows, o APEX 01 usa o driver [PawnIO](https://pawnio.eu/) para obter a
+temperatura real do processador Ryzen. Sem o PawnIO ou sem permissão elevada
+para acessar os sensores, a leitura pode aparecer como `--`; o APEX não estima
+a temperatura a partir do uso da CPU.
+
+- Para verificar se o PawnIO está instalado e se o driver está em execução,
+  execute `.\verificar_pawnio.ps1` no PowerShell.
+- Para instalar o PawnIO apenas se estiver ausente e depois validar o driver,
+  execute `.\instalar_pawnio.bat` e aprove a solicitação do UAC. A instalação é
+  feita pelo `winget` (`namazso.PawnIO`).
+- Para configurar o APEX 01 com acesso elevado e iniciar automaticamente no
+  logon, execute `.\configurar_inicio_apex.bat` e aprove as solicitações do UAC.
+  Esse configurador também instala o PawnIO se necessário.
+
+Se a conta ainda não for administradora, o configurador de inicialização a
+adiciona ao grupo Administradores; isso aumenta permanentemente os privilégios
+da conta e exige sair e entrar novamente no Windows. Se a temperatura continuar
+indisponível, consulte `%LOCALAPPDATA%\APEX01\logs\apex01.log` e execute
+`.\verificar_pawnio.ps1` para conferir o estado do driver.
 
 Consulte o [guia de execução dos arquivos BAT no Windows 11](EXECUTAR_BATS_WINDOWS_11.md) para comandos copiáveis, preparação e diagnóstico.
 

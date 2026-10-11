@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
 import sys
@@ -17,14 +18,20 @@ from .weather import WeatherCollector
 
 LOG = logging.getLogger(__name__)
 STOP_REQUEST = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "APEX01" / "stop.request"
+LOG_FILE = STOP_REQUEST.parent / "logs" / "apex01.log"
 
 
 def setup_logging(verbose: bool = False) -> None:
     level = logging.DEBUG if verbose else logging.INFO
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%H:%M:%S",
+        handlers=[
+            logging.StreamHandler(),
+            RotatingFileHandler(LOG_FILE, maxBytes=1_000_000, backupCount=2, encoding="utf-8"),
+        ],
     )
 
 

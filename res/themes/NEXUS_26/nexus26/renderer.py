@@ -25,6 +25,13 @@ from .weather import WeatherCollector
 
 W, H = 480, 320
 LOG = logging.getLogger(__name__)
+DAYS_PTBR = ("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
+MONTHS_PTBR = ("JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ")
+
+
+def format_local_date(now=None) -> str:
+    now = now or time.localtime()
+    return f"{DAYS_PTBR[now.tm_wday]} {now.tm_mday:02d} {MONTHS_PTBR[now.tm_mon - 1]} {now.tm_year}"
 
 
 def write_stream(
@@ -429,23 +436,23 @@ def render_session(
         if max_frames is not None and max_frames > 1:
             phase = (frame_count - 1) / max_frames
             if phase < 0.2:
-                sys_status, sys_sub1, sys_sub2 = "GOOD", "All systems", "operational"
+                sys_status, sys_sub1, sys_sub2 = "GOOD", "Todos os sistemas", "operacionais"
                 is_warn = False
                 cpu = int(25 + 15 * math.sin(frame_count * 0.5))
             elif phase < 0.4:
-                sys_status, sys_sub1, sys_sub2 = "HEAVY", "Resource load", "elevated"
+                sys_status, sys_sub1, sys_sub2 = "HEAVY", "Carga do sistema", "elevada"
                 is_warn = True
                 cpu = int(96 + 3 * math.sin(frame_count * 0.5))
             elif phase < 0.6:
-                sys_status, sys_sub1, sys_sub2 = "MEMORY", "Memory use", "critically high"
+                sys_status, sys_sub1, sys_sub2 = "MEMORY", "Uso da memória", "muito alto"
                 is_warn = True
                 rp = 96
             elif phase < 0.8:
-                sys_status, sys_sub1, sys_sub2 = "DISK", "Free space", "running low"
+                sys_status, sys_sub1, sys_sub2 = "DISK", "Espaço em disco", "baixo"
                 is_warn = True
                 dp = 94
             else:
-                sys_status, sys_sub1, sys_sub2 = "HOT", "Thermal limit", "approaching"
+                sys_status, sys_sub1, sys_sub2 = "HOT", "Limite térmico", "próximo"
                 is_warn = True
                 cpu_temp = "96"
 
@@ -477,7 +484,7 @@ def render_session(
         draw_wide_center_dot_matrix_visualizer(d, viz_x_start, 30, smooth_per_core, PURPLE_NEON)
 
         time_str = time.strftime("%H:%M")
-        date_str = time.strftime("%a %d %b %Y").upper()
+        date_str = format_local_date()
         w_time = d.textlength(time_str, font=fHeaderTime)
         d.text((468 - w_time, 0), time_str, fill=WHITE, font=fHeaderTime)
         w_date = d.textlength(date_str, font=fMicro)
@@ -519,10 +526,12 @@ def render_session(
         # ── 3. RIGHT QUANTUM BREATHING PULSE CORE RING ──
         rcx, rcy = 360, 142
         draw_quantum_breathing_pulse_core(d, rcx, rcy, m_now, is_warning=is_warn)
-        draw_centered_text(d, rcx, 83, "SYSTEM", fMicro, sys_color)
+        draw_centered_text(d, rcx, 83, "SISTEMA", fMicro, sys_color)
         d.fontmode = "1"
-        status_font = fSystemGood if len(sys_status) <= 5 else fBigVal
-        draw_centered_text(d, rcx, 98, sys_status, status_font, WHITE)
+        status_labels = {"GOOD": "BOM", "HEAVY": "CARGA", "MEMORY": "RAM", "DISK": "DISCO", "HOT": "QUENTE"}
+        status_label = status_labels.get(sys_status, sys_status)
+        status_font = fSystemGood if len(status_label) <= 5 else fBigVal
+        draw_centered_text(d, rcx, 98, status_label, status_font, WHITE)
         d.fontmode = "L"
         draw_centered_text(d, rcx, 137, sys_sub1, fMicro, GRAY_TEXT)
         draw_centered_text(d, rcx, 148, sys_sub2, fMicro, GRAY_TEXT)
@@ -530,16 +539,16 @@ def render_session(
 
         # ── 4. BOTTOM UTILITY BAR CARDS ──
         fan_rpm = snapshot.fan_rpm
-        fan_status = "NO SENSOR" if fan_rpm is None else ("SILENT" if fan_rpm == 0 else "ACTIVE")
+        fan_status = "SEM SENSOR" if fan_rpm is None else ("PARADA" if fan_rpm == 0 else "ATIVA")
         draw_concept_fan_icon(d, 22, 266, PURPLE_NEON)
-        d.text((54, 257), "FAN", fill=PURPLE_LIGHT, font=fMicro)
+        d.text((54, 257), "VENT.", fill=PURPLE_LIGHT, font=fMicro)
         draw_fan_value(d, 104, 271, fan_rpm, fCardVal, fNano, fMicro, WHITE, GRAY_TEXT)
         d.text((54, 289), fan_status, fill=PURPLE_LIGHT, font=fMicro)
 
         up = snapshot.net_up_mb_s
         dn = snapshot.net_down_mb_s
         draw_concept_network_icon(d, 120, 267, PURPLE_NEON)
-        d.text((150, 257), "NETWORK", fill=PURPLE_LIGHT, font=fMicro)
+        d.text((150, 257), "REDE", fill=PURPLE_LIGHT, font=fMicro)
         draw_up_arrow(d, 150, 273, PURPLE_NEON)
         d.text((157, 270), format_network_rate(up), fill=WHITE, font=fCardVal)
         draw_down_arrow(d, 198, 273, PURPLE_NEON)
@@ -550,12 +559,12 @@ def render_session(
         us = snapshot.uptime_seconds
         ust_h, ust_m = format_uptime(us)
         draw_concept_clock_icon(d, 264, 266, PURPLE_NEON)
-        d.text((294, 257), "UPTIME", fill=PURPLE_LIGHT, font=fMicro)
+        d.text((294, 257), "LIGADO", fill=PURPLE_LIGHT, font=fMicro)
         d.text((294, 271), ust_h, fill=WHITE, font=fCardVal)
         d.text((294, 289), ust_m, fill=WHITE, font=fCardVal)
 
         draw_concept_weather_icon(d, 366, 266, weather_snapshot.condition)
-        d.text((398, 257), "WEATHER", fill=PURPLE_LIGHT, font=fMicro)
+        d.text((398, 257), "CLIMA", fill=PURPLE_LIGHT, font=fMicro)
         d.text((398, 271), weather_snapshot.temperature, fill=WHITE, font=fCardVal)
         d.text((398, 289), weather_snapshot.description, fill=GRAY_TEXT, font=fNano)
 

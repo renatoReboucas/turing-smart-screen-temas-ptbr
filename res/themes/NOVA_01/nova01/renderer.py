@@ -12,6 +12,13 @@ from .weather import WeatherCollector
 
 W, H = 480, 320
 LOG = logging.getLogger(__name__)
+DAYS_PTBR = ("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
+MONTHS_PTBR = ("JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ")
+
+
+def format_local_date(now=None) -> str:
+    now = now or time.localtime()
+    return f"{DAYS_PTBR[now.tm_wday]}   {now.tm_mday:02d}   {MONTHS_PTBR[now.tm_mon - 1]}   {now.tm_year}"
 
 # Colors matching concept 100% (PURE BLACK PANELS, NO BLUE)
 BG = (0, 0, 0)              # Absolute Pitch Black #000000
@@ -340,13 +347,13 @@ def render_session(
         dn_val = format_rate(snapshot.net_down_mb_s)
         
         # UP Network Block
-        d.text((290, 10), "UP", font=fNano, fill=TEXT_MUTED)
+        d.text((290, 10), "ENVIO", font=fNano, fill=TEXT_MUTED)
         draw_up_arrow(d, 276, 21, CYAN)
         d.text((286, 20), up_val, font=fMedium, fill=CYAN)
         d.text((276, 34), "MB/s", font=fNano, fill=TEXT_MUTED)
 
         # DOWN Network Block
-        d.text((370, 10), "DOWN", font=fNano, fill=TEXT_MUTED)
+        d.text((370, 10), "REC.", font=fNano, fill=TEXT_MUTED)
         draw_down_arrow(d, 356, 21, PURPLE)
         d.text((366, 20), dn_val, font=fMedium, fill=PURPLE)
         d.text((356, 34), "MB/s", font=fNano, fill=TEXT_MUTED)
@@ -364,7 +371,7 @@ def render_session(
 
         # Centered Clock & Date with generous breathing room
         time_str = time.strftime("%H:%M")
-        date_str = time.strftime("%a   %d   %b   %Y").upper()
+        date_str = format_local_date()
 
         w_clock = d.textlength(time_str, font=fClock)
         w_date = d.textlength(date_str, font=fDate)
@@ -410,7 +417,7 @@ def render_session(
             if idx < len(forecast):
                 day_name, day_cond, day_hi, day_lo = forecast[idx]
             else:
-                day_name, day_cond, day_hi, day_lo = ("SUN", "clear", "34°", "27°")
+                day_name, day_cond, day_hi, day_lo = ("DOM", "clear", "34°", "27°")
 
             w_dn = d.textlength(day_name, font=fNano)
             d.text((cx - w_dn / 2, 180), day_name, font=fNano, fill=TEXT_MUTED)
@@ -433,7 +440,7 @@ def render_session(
         draw_glowing_wave_graph(d, (316, 68, 460, 86), cpu_history, CYAN)
         freq_str = f"{snapshot.cpu_frequency_ghz:.1f} GHz" if snapshot.cpu_frequency_ghz else "N/A"
         d.text((316, 90), freq_str, font=fNano, fill=TEXT_MUTED)
-        d.text((430, 90), "60 sec", font=fNano, fill=TEXT_MUTED)
+        d.text((430, 90), "60 seg", font=fNano, fill=TEXT_MUTED)
 
         # RAM Card (258, 114, 470, 174)
         d.rounded_rectangle([258, 114, 470, 174], radius=6, fill=CARD_BG, outline=CARD_BORDER, width=1)
@@ -463,18 +470,18 @@ def render_session(
         # Card 1: FAN
         d.rounded_rectangle([10, 246, 120, 310], radius=6, fill=CARD_BG, outline=CARD_BORDER, width=1)
         draw_fan_icon(d, 16, 256, TEXT_MUTED)
-        d.text((46, 249), "FAN", font=fNano, fill=TEXT_MUTED)
+        d.text((46, 249), "VENT.", font=fNano, fill=TEXT_MUTED)
         fan_rpm = snapshot.fan_rpm
         fan_str = "0 RPM" if fan_rpm is None or fan_rpm == 0 else f"{fan_rpm} RPM"
         d.text((46, 260), fan_str, font=fTitle, fill=TEXT_WHITE)
-        fan_st = "SILENT" if fan_rpm is None or fan_rpm == 0 else "ACTIVE"
+        fan_st = "SEM SENSOR" if fan_rpm is None else ("PARADA" if fan_rpm == 0 else "ATIVA")
         d.text((46, 276), fan_st, font=fNano, fill=TEXT_MUTED)
-        draw_segment_bar(d, (46, 290, 110, 296), 20 if fan_st == "SILENT" else 80, CYAN)
+        draw_segment_bar(d, (46, 290, 110, 296), 20 if fan_rpm is None or fan_rpm == 0 else 80, CYAN)
 
         # Card 2: TEMP
         d.rounded_rectangle([126, 246, 236, 310], radius=6, fill=CARD_BG, outline=CARD_BORDER, width=1)
         draw_thermometer_icon(d, 134, 256, ORANGE)
-        d.text((156, 249), "TEMP", font=fNano, fill=TEXT_MUTED)
+        d.text((156, 249), "TEMP.", font=fNano, fill=TEXT_MUTED)
         t_val_str = f"{temp_val:.0f}°C"
         d.text((156, 260), t_val_str, font=fTitle, fill=TEXT_WHITE)
         draw_glowing_wave_graph(d, (134, 290, 228, 304), temp_history, ORANGE)
@@ -482,7 +489,7 @@ def render_session(
         # Card 3: UPTIME
         d.rounded_rectangle([242, 246, 352, 310], radius=6, fill=CARD_BG, outline=CARD_BORDER, width=1)
         draw_clock_icon(d, 250, 256, CYAN)
-        d.text((276, 249), "UPTIME", font=fNano, fill=TEXT_MUTED)
+        d.text((276, 249), "LIGADO", font=fNano, fill=TEXT_MUTED)
         up_str = format_uptime(snapshot.uptime_seconds)
         d.text((276, 262), up_str, font=fMicro, fill=TEXT_WHITE)
         uptime_history.append(float(snapshot.uptime_seconds % 3600))
@@ -491,9 +498,9 @@ def render_session(
         # Card 4: PROCESSES
         d.rounded_rectangle([358, 246, 470, 310], radius=6, fill=CARD_BG, outline=CARD_BORDER, width=1)
         draw_pulse_icon(d, 366, 256, TEXT_WHITE)
-        d.text((394, 249), "PROCESSES", font=fNano, fill=TEXT_MUTED)
+        d.text((394, 249), "PROCESSOS", font=fNano, fill=TEXT_MUTED)
         d.text((394, 260), str(snapshot.process_count), font=fTitle, fill=TEXT_WHITE)
-        d.text((394, 276), "Running", font=fNano, fill=TEXT_MUTED)
+        d.text((394, 276), "ATIVOS", font=fNano, fill=TEXT_MUTED)
         draw_glowing_wave_graph(d, (366, 290, 462, 304), procs_history, PURPLE)
 
         # Send frame to hardware

@@ -1,37 +1,47 @@
 # NEXUS 26
 
-Portable 480×320 landscape theme for TURZX/Turing/UsbMonitor 3.5-inch displays
-using VID/PID `1a86:5722`.
+Tema portátil em paisagem (480×320) para telas TURZX/Turing/UsbMonitor de
+3,5 polegadas com VID/PID `1a86:5722`.
 
-## What is portable
+## Portabilidade
 
-- No user name, home directory, Python path, USB port, interface, or endpoint is hard-coded.
-- macOS defaults to direct `libusb` writes for smoother partial updates.
-- Windows defaults to the normal serial/COM device, so Zadig/WinUSB is not required.
-- The process stays alive when the screen is unplugged and reconnects after it is attached again.
-- Assets, fonts, config, tests, and installers are contained in this directory.
-- CPU, RAM, disk, network, uptime, and system identity are detected at runtime.
-- On Apple Silicon, the installer uses the MIT-licensed `macmon` backend for
-  CPU/GPU temperature, fan RPM, and Activity Monitor-style RAM usage without
-  `sudo`. GPU load uses the Apple driver's `Device Utilization %` from `ioreg`
-  (with macmon effective usage only as fallback); the theme never invents values.
-- APFS storage uses container size/free space instead of the read-only system
-  snapshot, so used/total values match the physical SSD container.
+- Nome de usuário, diretório pessoal, caminho do Python, porta USB, interface e
+  endpoint não são fixados no código.
+- No macOS, o padrão usa gravação direta com `libusb` para atualizações parciais
+  mais suaves.
+- No Windows, o padrão usa a porta serial/COM; não é necessário instalar
+  Zadig/WinUSB.
+- O tema continua ativo quando a tela é desconectada e tenta reconectar quando
+  ela volta.
+- Recursos, fontes, configuração, testes e instaladores estão neste diretório.
+- CPU, memória, disco, rede, tempo ligado e identificação do sistema são
+  detectados durante a execução.
+- No Apple Silicon, o instalador usa o backend `macmon` (licença MIT) para
+  temperatura da CPU/GPU, rotação das ventoinhas e uso de memória semelhante
+  ao Monitor de Atividade, sem `sudo`. O uso da GPU vem de `Device Utilization %`
+  do driver Apple via `ioreg`, usando o valor efetivo do `macmon` somente como
+  alternativa. O tema não inventa valores.
+- No APFS, o armazenamento é calculado pelo tamanho e espaço livre do
+  contêiner, em vez do snapshot de sistema somente para leitura; assim, os
+  valores correspondem ao contêiner físico do SSD.
 
-## Supported hardware
+## Hardware compatível
 
-The layout is intentionally limited to a 480×320 landscape 3.5-inch panel.
-The default serial number check (`USB35INCHIPSV2`) prevents accidentally sending
-the 3.5-inch frame format to a 5-inch or 7-inch display with the same VID/PID.
+O layout foi projetado para telas de 3,5 polegadas em paisagem, com resolução
+480×320. A verificação padrão do número de série (`USB35INCHIPSV2`) evita enviar
+acidentalmente o formato de imagem de 3,5 polegadas a uma tela de 5 ou 7
+polegadas com o mesmo VID/PID.
 
-If a genuine 3.5-inch clone has a different serial number, set
-`allow_unverified_device: true` only after confirming its resolution and protocol.
+Se uma tela compatível de 3,5 polegadas tiver outro número de série, defina
+`allow_unverified_device: true` somente depois de confirmar a resolução e o
+protocolo.
 
-### Windows sensor troubleshooting
+### Diagnóstico dos sensores no Windows
 
-GPU load and fan RPM appear only when a supported sensor backend and the
-hardware driver expose those values. Missing readings remain `N/A`. Run from
-PowerShell to see diagnostics:
+A utilização da GPU e a rotação das ventoinhas só aparecem quando um backend de
+sensores compatível e o driver do hardware fornecem esses valores. Leituras
+indisponíveis permanecem como `N/A`. Execute pelo PowerShell para consultar o
+diagnóstico:
 
 ```powershell
 Set-Location "$env:LOCALAPPDATA\NEXUS26"
@@ -39,103 +49,101 @@ Stop-ScheduledTask -TaskName "NEXUS26 Display" -ErrorAction SilentlyContinue
 .\.venv\Scripts\python.exe -m nexus26 --config .\config.yaml
 ```
 
-If a reading remains unavailable, share warning lines from
-`logs\nexus26.log`, the GPU and motherboard models, and whether
-LibreHardwareMonitor shows those sensors on that PC.
+Se alguma leitura continuar indisponível, consulte as mensagens de aviso em
+`logs\nexus26.log`, os modelos da GPU e da placa-mãe e verifique se o
+LibreHardwareMonitor mostra esses sensores nesse computador.
 
-## Screen orientation
+## Orientação da tela
 
-NEXUS 26 currently renders only the 480×320 landscape layout. Portrait needs a
-separate 320×480 layout and is not supported yet. There is no user-facing
-rotation setting for upside-down landscape; controller rotation values can
-vary by screen revision, so share the revision before changing the orientation
-command.
+O NEXUS 26 renderiza apenas no formato paisagem de 480×320. O formato retrato
+exige um layout separado de 320×480 e ainda não é compatível. Não há opção de
+interface para inverter a paisagem: os valores de rotação podem variar conforme
+a revisão da tela. Confirme a revisão antes de alterar o comando de orientação.
 
-## Quick preview
+## Prévia rápida
 
-From this directory:
+A partir deste diretório:
 
 ```bash
 python3 -m pip install -r requirements-portable.txt
 python3 -m nexus26 --preview preview.png
 ```
 
-## Install on macOS
+## Instalação no macOS
 
-Python 3.10 or newer is required.
+É necessário ter o Python 3.10 ou mais recente.
 
 ```bash
 chmod +x installers/install-macos.sh installers/uninstall-macos.sh
 ./installers/install-macos.sh
 ```
 
-The installer copies the theme to
-`~/Library/Application Support/NEXUS26`, creates a private virtual environment,
-and registers `com.nexus26.display` as a per-user LaunchAgent.
+O instalador copia o tema para `~/Library/Application Support/NEXUS26`, cria um
+ambiente virtual isolado e registra `com.nexus26.display` como LaunchAgent do
+usuário.
 
-To remove autostart without deleting config or logs:
+Para remover a inicialização automática sem apagar configurações nem registros:
 
 ```bash
 ./installers/uninstall-macos.sh
 ```
 
-## Install on Windows
+## Instalação no Windows
 
-Install Python 3.10 or newer and make sure the launcher `py` is available. Open
-PowerShell in this directory:
+Instale o Python 3.10 ou mais recente e confirme que o lançador `py` está
+disponível. Abra o PowerShell neste diretório:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\installers\install-windows.ps1
 ```
 
-The installer copies the theme to `%LOCALAPPDATA%\NEXUS26`, creates a private
-virtual environment, and registers a per-user Scheduled Task named
-`NEXUS26 Display`.
+O instalador copia o tema para `%LOCALAPPDATA%\NEXUS26`, cria um ambiente
+virtual isolado e registra a tarefa agendada do usuário `NEXUS26 Display`.
 
-To remove autostart:
+Para remover a inicialização automática:
 
 ```powershell
 .\installers\uninstall-windows.ps1
 ```
 
-## Configuration
+## Configuração
 
-Edit `config.yaml` before installing, or edit the installed copy afterward.
+Edite `config.yaml` antes da instalação ou altere depois a cópia instalada.
 
-- `device.transport`: `auto`, `libusb`, or `serial`
-- `device.port`: `AUTO` or a specific port such as `COM4`
-- `display.fps`: capped at 15 because this is a USB full-speed display, not an
-  ordinary HDMI/DisplayPort monitor
-- `device.chunk_size`: `4096` is stable through typical shared USB hubs
-- `weather.location`: optional city/location used by wttr.in
-- `metrics.network_interface`: `auto` or a specific interface such as `en1`
-- `logging.file`: rotating log file (1 MB × 4 files including the active log)
+- `device.transport`: `auto`, `libusb` ou `serial`
+- `device.port`: `AUTO` ou uma porta específica, como `COM4`
+- `display.fps`: limitado a 15; esta é uma tela USB de alta velocidade, não um
+  monitor HDMI/DisplayPort comum
+- `device.chunk_size`: `4096` funciona de forma estável em hubs USB compartilhados típicos
+- `weather.location`: cidade/localidade opcional usada pelo wttr.in
+- `metrics.network_interface`: `auto` ou uma interface específica, como `en1`
+- `logging.file`: arquivo de registro rotativo (1 MB × 4 arquivos, incluindo o atual)
 
-See [METRICS.md](METRICS.md) for the audited source, definition, unit, refresh
-rate, and caveats of every displayed value.
+Consulte [METRICS.md](METRICS.md) para ver a origem, definição, unidade,
+frequência de atualização e ressalvas de cada valor exibido.
 
-Run once without reconnecting:
+Para executar uma vez, sem tentar reconectar:
 
 ```bash
 python3 -m nexus26 --config config.yaml --once
 ```
 
-## Test
+## Testes
 
 ```bash
 PYTHONPATH=. python3 -m unittest discover -s tests -v
 ```
 
-The tests do not require a connected display.
+Os testes não exigem que uma tela esteja conectada.
 
-## Distribution notes
+## Notas de distribuição
 
-The renderer code is distributed under GPL-3.0-or-later because it derives from
-the surrounding `turing-smart-screen-python` project. Roboto's Apache 2.0 license
-is included at `fonts/LICENSE-Roboto.txt`.
+O código do renderizador é distribuído sob a licença GPL-3.0 ou posterior, pois
+deriva do projeto `turing-smart-screen-python`. A licença Apache 2.0 da fonte
+Roboto está incluída em `fonts/LICENSE-Roboto.txt`.
 
-Apple and Windows names/logos are trademarks of their respective owners and are
-included only as platform-identification artwork. They are not endorsements.
-Review the trademark rules that apply to your distribution channel before
-publishing the package.
+Os nomes e logotipos Apple e Windows são marcas registradas de seus respectivos
+proprietários e aparecem apenas para identificar a plataforma; não representam
+endosso. Antes de publicar o pacote, consulte as regras de uso de marcas do
+canal de distribuição escolhido.

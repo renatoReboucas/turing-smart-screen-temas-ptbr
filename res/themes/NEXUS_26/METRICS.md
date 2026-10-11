@@ -1,42 +1,44 @@
-# Metrics audit
+# Auditoria das métricas
 
-NEXUS 26 keeps acquisition separate from rendering. A snapshot is collected
-every 0.5 seconds by default; display cards rotate approximately once per
-second to stay within the USB full-speed bandwidth.
+O NEXUS 26 separa a coleta de dados da renderização. Por padrão, uma amostra é
+coletada a cada 0,5 segundo; os cartões são atualizados aproximadamente uma
+vez por segundo para respeitar a largura de banda USB de alta velocidade.
 
-| Display | Source | Definition and unit |
+| Exibição | Origem | Definição e unidade |
 |---|---|---|
-| CPU % | `psutil.cpu_percent` | Average non-idle time across logical CPUs during the sampling window. |
-| CPU °C | `macmon` on Apple Silicon | Average CPU sensor temperature. `N/A` when the platform exposes no real sensor. |
-| GPU % | Apple `AGXAccelerator` via `ioreg` | Driver `Device Utilization %`. `macmon` effective GPU usage is the macOS fallback. |
-| GPU °C | `macmon` on Apple Silicon | Average GPU sensor temperature. |
-| RAM | `macmon` on Apple Silicon | Activity Monitor-style used bytes divided by physical bytes; displayed in GiB. Other platforms use `total - available` consistently for both value and percent. |
-| SSD | APFS container via `diskutil` on macOS | Container size minus container free space, in decimal GB. This avoids the sealed system snapshot error. Other platforms use the home drive. Refreshed every 30 seconds. |
-| Fan | `macmon` on Apple Silicon | Actual RPM. Multiple fans are averaged because the card has room for one value. |
-| Network | Default-route interface via `psutil` | Byte-counter delta divided by elapsed monotonic time, in decimal MB/s. Loopback, AWDL, VPN, and other interfaces are excluded unless selected explicitly. |
-| Uptime | `psutil.boot_time` | Wall-clock seconds since system boot, including sleep. |
-| Weather | wttr.in | Current Celsius observation. Blank location uses IP geolocation; set `weather.location` for deterministic results. Long descriptions are mapped to compact meaningful conditions. |
-| Clock/date | Local system time | Uses the operating system timezone and locale. |
-| Model/OS | `system_profiler` / platform APIs | Detected at startup; no model or OS version is hard-coded. |
+| Exibição | Origem | Definição e unidade |
+|---|---|---|
+| CPU % | `psutil.cpu_percent` | Média do tempo ativo das CPUs lógicas durante o intervalo de amostragem. |
+| CPU °C | `macmon` no Apple Silicon | Temperatura média do sensor da CPU. Exibe `N/A` se a plataforma não fornecer um sensor real. |
+| GPU % | Apple `AGXAccelerator` via `ioreg` | `Device Utilization %` informado pelo driver. O uso efetivo da GPU no `macmon` é a alternativa no macOS. |
+| GPU °C | `macmon` no Apple Silicon | Temperatura média do sensor da GPU. |
+| RAM | `macmon` no Apple Silicon | Bytes usados, no padrão do Monitor de Atividade, divididos pela memória física; exibidos em GiB. Nas demais plataformas, usa-se `total - available` tanto para o valor quanto para o percentual. |
+| SSD | Contêiner APFS via `diskutil` no macOS | Tamanho do contêiner menos o espaço livre, em GB decimais. Isso evita o erro do snapshot de sistema selado. Nas demais plataformas, usa-se a unidade do diretório pessoal. Atualizado a cada 30 segundos. |
+| Ventoinha | `macmon` no Apple Silicon | Rotação real em RPM. A rotação de várias ventoinhas é calculada pela média porque o cartão mostra um único valor. |
+| Rede | Interface da rota padrão via `psutil` | Diferença dos contadores de bytes dividida pelo tempo monotônico decorrido, em MB/s decimais. Loopback, AWDL, VPN e outras interfaces são excluídas, salvo seleção explícita. |
+| Tempo ligado | `psutil.boot_time` | Segundos de relógio desde a inicialização do sistema, incluindo suspensão. |
+| Clima | wttr.in | Observação atual em Celsius. Sem localidade configurada, usa geolocalização por IP; defina `weather.location` para resultados consistentes. Descrições longas são convertidas em condições compactas. |
+| Hora/data | Hora local do sistema | Usa o fuso horário do sistema operacional; os nomes de dias e meses são exibidos em português. |
+| Modelo/SO | `system_profiler` / APIs da plataforma | Detectados na inicialização; modelo e versão do sistema operacional não são fixados no código. |
 
-## Health ring
+## Indicador de integridade
 
-The ring is an interpretation, not another sensor. Rules are evaluated in this
-order:
+O anel é uma interpretação dos dados, não um sensor adicional. As regras são
+avaliadas nesta ordem:
 
-1. `HOT`: CPU or GPU temperature at least 95°C.
-2. `HEAVY`: CPU or GPU utilization at least 95%.
-3. `MEMORY`: RAM usage at least 95%.
-4. `DISK`: storage usage at least 90%.
-5. `GOOD`: none of the above.
+1. `HOT` (quente): temperatura da CPU ou GPU de pelo menos 95 °C.
+2. `HEAVY` (carga alta): utilização da CPU ou GPU de pelo menos 95%.
+3. `MEMORY` (memória): uso da RAM de pelo menos 95%.
+4. `DISK` (disco): uso do armazenamento de pelo menos 90%.
+5. `GOOD` (bom): nenhuma das condições anteriores.
 
-The two subtitle lines state the reason, so a nearly full disk is no longer
-mislabelled as generic resource load.
+As duas linhas menores indicam o motivo, evitando classificar um disco quase
+cheio como uma carga genérica de recursos.
 
-## Platform caveats
+## Observações por plataforma
 
-Apple Silicon enhanced sensors use the optional MIT-licensed `macmon` command.
-The macOS installer adds it through Homebrew when Homebrew is available.
-Windows and Linux only show temperature/fan values when a genuine platform
-sensor backend exposes them; the renderer never derives temperature or RPM
-from CPU utilization.
+Os sensores aprimorados do Apple Silicon usam o comando opcional `macmon`,
+licenciado sob MIT. O instalador do macOS adiciona essa ferramenta pelo
+Homebrew, quando disponível. No Windows e Linux, temperatura e rotação das
+ventoinhas só aparecem se um backend de sensores da plataforma fornecer esses
+valores; o renderizador nunca estima temperatura ou RPM a partir do uso da CPU.

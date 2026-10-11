@@ -37,9 +37,9 @@ class MetricsAuditTests(unittest.TestCase):
         self.assertEqual(classify_health(20, 30, 50, 50, 50, 45)[0], "GOOD")
 
     def test_weather_descriptions_are_meaningful_and_fit(self) -> None:
-        self.assertEqual(compact_condition("Moderate or heavy rain with thunder"), ("THUNDER", "thunder"))
-        self.assertEqual(compact_condition("Partly cloudy"), ("PARTLY CLOUDY", "partly_cloudy"))
-        self.assertEqual(compact_condition("Light rain shower"), ("RAIN", "rain"))
+        self.assertEqual(compact_condition("Moderate or heavy rain with thunder"), ("TROVOADA", "thunder"))
+        self.assertEqual(compact_condition("Partly cloudy"), ("NUBL. PARC.", "partly_cloudy"))
+        self.assertEqual(compact_condition("Light rain shower"), ("CHUVA", "rain"))
 
     def test_uptime_source_matches_boot_time(self) -> None:
         uptime = time.time() - psutil.boot_time()

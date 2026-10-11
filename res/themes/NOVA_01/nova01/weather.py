@@ -21,47 +21,46 @@ LOG = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class WeatherSnapshot:
     temperature: str = "32°C"
-    description: str = "Partly Cloudy"
+    description: str = "Parc. nublado"
     condition: str = "partly_cloudy"
-    location: str = "HO CHI MINH CITY"
+    location: str = "HO CHI MINH"
     high_c: str = "33°"
     low_c: str = "26°"
     humidity: str = "65%"
     forecast_days: tuple[tuple[str, str, str, str], ...] = (
-        ("WED", "rain", "32°", "25°"),
-        ("THU", "cloudy", "31°", "25°"),
-        ("FRI", "partly_cloudy", "33°", "26°"),
-        ("SAT", "clear", "34°", "27°"),
-        ("SUN", "clear", "34°", "27°"),
+        ("QUA", "rain", "32°", "25°"),
+        ("QUI", "cloudy", "31°", "25°"),
+        ("SEX", "partly_cloudy", "33°", "26°"),
+        ("SÁB", "clear", "34°", "27°"),
+        ("DOM", "clear", "34°", "27°"),
     )
 
 
 def compact_condition(description: str) -> tuple[str, str]:
     normalized = description.strip().lower()
     if "thunder" in normalized:
-        return "Thunder", "thunder"
+        return "Tempestade", "thunder"
     if "snow" in normalized or "blizzard" in normalized:
-        return "Snow", "snow"
+        return "Neve", "snow"
     if "sleet" in normalized or "ice" in normalized:
-        return "Sleet", "snow"
+        return "Chuva congelada", "snow"
     if "rain" in normalized or "shower" in normalized:
-        return "Rain", "rain"
+        return "Chuva", "rain"
     if "drizzle" in normalized:
-        return "Drizzle", "rain"
+        return "Garoa", "rain"
     if "fog" in normalized or "mist" in normalized:
-        return "Fog", "fog"
+        return "Neblina", "fog"
     if "partly" in normalized:
-        return "Partly Cloudy", "partly_cloudy"
+        return "Parc. nublado", "partly_cloudy"
     if "cloud" in normalized or "overcast" in normalized:
-        return "Cloudy", "cloudy"
+        return "Nublado", "cloudy"
     if "sun" in normalized or "clear" in normalized:
-        return "Clear", "clear"
-    label = description.title()
-    return (label if len(label) <= 16 else "Weather", "unknown")
+        return "Limpo", "clear"
+    return "Tempo", "unknown"
 
 
 def build_consecutive_5_days() -> tuple[tuple[str, str, str, str], ...]:
-    days_map = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+    days_map = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]
     conds = ["rain", "cloudy", "partly_cloudy", "clear", "clear"]
     temps = [("32°", "25°"), ("31°", "25°"), ("33°", "26°"), ("34°", "27°"), ("34°", "27°")]
     today = datetime.date.today()
@@ -117,7 +116,7 @@ class WeatherCollector:
             current["weatherDesc"][0]["value"]
         )
         nearest_area = data.get("nearest_area") or []
-        location_name = self.config.location.upper() or "HO CHI MINH CITY"
+        location_name = self.config.location.upper() or "HO CHI MINH"
         if nearest_area and not self.config.location:
             names = nearest_area[0].get("areaName") or []
             if names:
@@ -129,7 +128,7 @@ class WeatherCollector:
         humidity = f"{current.get('humidity', '65')}%"
 
         forecast_list = []
-        days_map = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+        days_map = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]
         last_dt = datetime.date.today()
 
         for day_data in weather_days:

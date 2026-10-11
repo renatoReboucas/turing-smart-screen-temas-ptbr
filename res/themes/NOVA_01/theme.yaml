@@ -13,12 +13,12 @@ display:
   DISPLAY_RGB_LED: 0, 229, 255
 
 metrics:
-  - System clock, date, location and 5-day weather forecast
-  - Default-route network throughput (UP & DOWN MB/s)
-  - CPU percentage, circular arc gauge, frequency, and 60s history graph
-  - RAM percentage, circular arc gauge, segment bar, and used/total GiB
-  - SSD percentage, circular arc gauge, segment bar, and used/total GB
-  - Fan RPM and SILENT/ACTIVE status
-  - CPU/GPU temperature with mini trend line
-  - System uptime with mini trend line
-  - Active process count with mini trend line
+  - Relógio, data, localização e previsão do tempo para 5 dias
+  - Tráfego de rede pela rota padrão (envio e recebimento em MB/s)
+  - Percentual da CPU, medidor circular, frequência e gráfico dos últimos 60 s
+  - Percentual da RAM, medidor circular, barra segmentada e uso/total em GiB
+  - Percentual do SSD, medidor circular, barra segmentada e uso/total em GB
+  - Rotação das ventoinhas (RPM) e estado
+  - Temperatura da CPU/GPU com gráfico de tendência
+  - Tempo ligado com gráfico de tendência
+  - Número de processos ativos com gráfico de tendência

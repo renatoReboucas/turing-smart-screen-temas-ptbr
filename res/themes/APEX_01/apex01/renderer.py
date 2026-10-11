@@ -302,6 +302,12 @@ def format_rate(rate_mb_s: float) -> str:
     return f"{min(99.9, rate / 1000):.1f}K"
 
 
+def format_vram_usage(used_gb: float | None, total_gb: float | None) -> str:
+    if total_gb is None or total_gb <= 0:
+        return "N/A"
+    return f"{(used_gb or 0.0):.1f}/{total_gb:.0f}GB"
+
+
 def render_frame(
     config: AppConfig,
     snapshot,
@@ -482,19 +488,18 @@ def render_frame(
     draw_thermometer_icon(d, 296, 258, ORANGE)
     d.text((324, 258), "TEMP", fill=WHITE, font=fMedium)
     cpu_temp = "--" if snapshot.cpu_temp_c is None else f"{snapshot.cpu_temp_c:.0f}°C"
-    d.text((324, 270), cpu_temp, fill=ORANGE, font=fMedium)
+    d.text((324, 268), cpu_temp, fill=ORANGE, font=fonts["fTempValue"])
     draw_mini_wave_graph(d, [294, 298, 372, 306], temp_history, line_color=ORANGE)
 
-    # Column 5: VRAM (X=380..468, Start X=415)
-    d.text((415, 258), "VRAM", fill=WHITE, font=fMedium)
-    vram_total = snapshot.gpu_vram_total_gb
-    if vram_total is None or vram_total <= 0:
-        d.text((415, 274), "N/A", fill=(140, 140, 140), font=fMedium)
-    else:
-        vram_used = snapshot.gpu_vram_used_gb or 0.0
-        vram_percent = min(100.0, (vram_used / vram_total) * 100.0)
-        d.text((415, 270), f"{vram_used:.1f}/{vram_total:.0f}G", fill=WHITE, font=fMedium)
-        d.text((415, 288), f"{vram_percent:.0f}%", fill=(160, 190, 220), font=fNano)
+    # Column 5: VRAM (X=380..468)
+    vram_title = "VRAM"
+    vram_title_width = d.textlength(vram_title, font=fonts["fVramTitle"])
+    d.text((380 + (88 - vram_title_width) / 2, 253), vram_title, fill=WHITE, font=fonts["fVramTitle"])
+    vram_text = format_vram_usage(snapshot.gpu_vram_used_gb, snapshot.gpu_vram_total_gb)
+    vram_font = fonts["fVramValue"]
+    vram_width = d.textlength(vram_text, font=vram_font)
+    vram_color = WHITE if vram_text != "N/A" else (140, 140, 140)
+    d.text((380 + (88 - vram_width) / 2, 279), vram_text, fill=vram_color, font=vram_font)
 
     return image
 
@@ -529,13 +534,16 @@ def render_session(
         fWeatherTemp = ImageFont.truetype(str(black_font), 30)
         fWeatherCond = ImageFont.truetype(str(bold_font), 11)
         fCardVal = ImageFont.truetype(str(bold_font), 12)
+        fTempValue = ImageFont.truetype(str(bold_font), 18)
+        fVramTitle = ImageFont.truetype(str(bold_font), 18)
+        fVramValue = ImageFont.truetype(str(bold_font), 16)
         fMedium = ImageFont.truetype(str(bold_font), 11)
         fSmall = ImageFont.truetype(str(regular_font), 10)
         fMicro = ImageFont.truetype(str(bold_font), 10)
         fNano = ImageFont.truetype(str(regular_font), 9)
     except OSError as exc:
         LOG.warning("Could not load bundled fonts: %s", exc)
-        fTitle = fClock = fHeaderTime = fBigVal = fWeatherTemp = fWeatherCond = fCardVal = fMedium = fSmall = fMicro = fNano = ImageFont.load_default()
+        fTitle = fClock = fHeaderTime = fBigVal = fWeatherTemp = fWeatherCond = fCardVal = fTempValue = fVramTitle = fVramValue = fMedium = fSmall = fMicro = fNano = ImageFont.load_default()
 
     fonts = {
         "fTitle": fTitle,
@@ -545,6 +553,9 @@ def render_session(
         "fWeatherTemp": fWeatherTemp,
         "fWeatherCond": fWeatherCond,
         "fCardVal": fCardVal,
+        "fTempValue": fTempValue,
+        "fVramTitle": fVramTitle,
+        "fVramValue": fVramValue,
         "fMedium": fMedium,
         "fSmall": fSmall,
         "fMicro": fMicro,

@@ -25,6 +25,13 @@ from .weather import WeatherCollector
 
 LOG = logging.getLogger(__name__)
 W, H = 480, 320
+DAYS_PTBR = ("SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM")
+MONTHS_PTBR = ("JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ")
+
+
+def format_local_date(now=None) -> str:
+    now = now or time.localtime()
+    return f"{DAYS_PTBR[now.tm_wday]} {now.tm_mday:02d} {MONTHS_PTBR[now.tm_mon - 1]} {now.tm_year}"
 
 BG = (3, 5, 6)
 PANEL = (5, 8, 9)
@@ -280,8 +287,8 @@ def format_uptime(seconds):
 
 def format_fan(rpm):
     if rpm is None:
-        return "N/A", "NO SENSOR"
-    return f"{rpm} RPM", "SILENT" if rpm == 0 else "ACTIVE"
+        return "N/A", "SEM SENSOR"
+    return f"{rpm} RPM", "PARADA" if rpm == 0 else "ATIVA"
 
 
 def format_temperature(snapshot):
@@ -329,13 +336,13 @@ def render_frame(
 
     # Left information column.
     draw_pixel_clock(draw, 25, 56, time.strftime("%H:%M"), scale=7)
-    draw.text((27, 111), time.strftime("%a %d %b %Y").upper(), font=f13, fill=WHITE)
+    draw.text((27, 111), format_local_date(), font=f13, fill=WHITE)
     draw.line([(26, 136), (238, 136)], fill=BORDER)
-    draw.text((27, 147), "UPTIME", font=f9, fill=MUTED)
+    draw.text((27, 147), "LIGADO", font=f9, fill=MUTED)
     _text_right(draw, 238, 145, format_uptime(snapshot.uptime_seconds), f11)
     draw.line([(26, 167), (238, 167)], fill=BORDER)
-    draw.text((27, 174), "WEATHER", font=f9, fill=MUTED)
-    location_label = (weather_snapshot.location or "LIVE").upper()
+    draw.text((27, 174), "CLIMA", font=f9, fill=MUTED)
+    location_label = (weather_snapshot.location or "AO VIVO").upper()
     if len(location_label) > 12:
         location_label = location_label[:11] + "…"
     _text_right(draw, 238, 174, location_label, font=f8, fill=MUTED)
@@ -345,9 +352,9 @@ def render_frame(
 
     # Vertical divider and Right-side weather stats (eliminates empty space x=162..238)
     draw.line([(162, 178), (162, 218)], fill=BORDER)
-    draw.text((170, 186), f"H {weather_snapshot.high_c}", font=f8, fill=(255, 120, 80))
-    draw.text((205, 186), f"L {weather_snapshot.low_c}", font=f8, fill=(96, 165, 250))
-    draw.text((170, 204), f"HUM {weather_snapshot.humidity}", font=f8, fill=MUTED)
+    draw.text((170, 186), f"MÁX {weather_snapshot.high_c}", font=f8, fill=(255, 120, 80))
+    draw.text((205, 186), f"MÍN {weather_snapshot.low_c}", font=f8, fill=(96, 165, 250))
+    draw.text((170, 204), f"UMID {weather_snapshot.humidity}", font=f8, fill=MUTED)
 
     # Right cards.
     cpu_box = (248, 54, 468, 119)
@@ -365,7 +372,7 @@ def render_frame(
     frequency = snapshot.cpu_frequency_ghz
     frequency_text = "N/A" if frequency is None else f"{frequency:.1f} GHz"
     _text_right(draw, 455, 86, frequency_text, f10, MUTED)
-    _text_right(draw, 455, 105, "60 sec", f8, MUTED)
+    _text_right(draw, 455, 105, "60 seg", f8, MUTED)
 
     draw.text((260, 132), "RAM", font=f11, fill=WHITE)
     _text_right(draw, 455, 128, f"{snapshot.ram_percent:.0f}%", f20)
@@ -398,26 +405,26 @@ def render_frame(
     draw.text((56, 229), "GPU", font=f9, fill=MUTED)
     gpu_text = "N/A" if snapshot.gpu_percent is None else f"{snapshot.gpu_percent:.0f}%"
     draw.text((56, 240), gpu_text, font=f14, fill=WHITE)
-    gpu_sub = "NO SENSOR" if snapshot.gpu_percent is None else "UTILIZATION"
+    gpu_sub = "SEM SENSOR" if snapshot.gpu_percent is None else "USO"
     draw.text((56, 257), gpu_sub, font=f8, fill=MUTED)
 
     # Column 2: LOAD 1M
     draw_load(draw, 173, 234)
-    draw.text((207, 229), "LOAD 1M", font=f9, fill=MUTED)
+    draw.text((207, 229), "CARGA 1M", font=f9, fill=MUTED)
     load_text = (
         "N/A"
         if snapshot.load_average_1m is None
         else f"{snapshot.load_average_1m:.2f}"
     )
     draw.text((207, 240), load_text, font=f14, fill=WHITE)
-    draw.text((207, 257), "1 MIN AVG", font=f8, fill=MUTED)
+    draw.text((207, 257), "MÉDIA 1 MIN", font=f8, fill=MUTED)
 
     # Column 3: PROCS
     draw_terminal(draw, 325, 234)
-    draw.text((359, 229), "PROCS", font=f9, fill=MUTED)
+    draw.text((359, 229), "PROC.", font=f9, fill=MUTED)
     process_text = "N/A" if snapshot.process_count <= 0 else str(snapshot.process_count)
     draw.text((359, 240), process_text, font=f14, fill=WHITE)
-    draw.text((359, 257), "TOTAL ACTIVE", font=f8, fill=MUTED)
+    draw.text((359, 257), "TOTAL", font=f8, fill=MUTED)
 
     # Bottom utility card.
     utility = (14, 276, 468, 314)
@@ -428,27 +435,27 @@ def render_frame(
     # Column 1: FAN
     fan_value, fan_status = format_fan(snapshot.fan_rpm)
     draw_fan(draw, 22, 281)
-    draw.text((56, 280), "FAN", font=f9, fill=MUTED)
+    draw.text((56, 280), "VENT.", font=f9, fill=MUTED)
     draw.text((56, 291), fan_value, font=f11, fill=WHITE)
     draw.text((56, 303), fan_status, font=f8, fill=MUTED)
 
     # Column 2: TEMP
     draw_thermometer(draw, 173, 280)
-    draw.text((207, 280), "TEMP", font=f9, fill=MUTED)
+    draw.text((207, 280), "TEMP.", font=f9, fill=MUTED)
     draw.text((207, 291), format_temperature(snapshot), font=f11, fill=WHITE)
     current_temp = snapshot.cpu_temp_c if snapshot.cpu_temp_c is not None else snapshot.gpu_temp_c
     if current_temp is None:
-        temp_status = "NO SENSOR"
+        temp_status = "SEM SENSOR"
     elif current_temp >= 88:
-        temp_status = "HOT"
+        temp_status = "QUENTE"
     elif current_temp >= 75:
-        temp_status = "WARM"
+        temp_status = "MORNO"
     else:
         temp_status = "NORMAL"
     draw.text((207, 303), temp_status, font=f8, fill=MUTED)
 
     # Column 3: NETWORK
-    draw.text((325, 280), "NETWORK", font=f9, fill=MUTED)
+    draw.text((325, 280), "REDE", font=f9, fill=MUTED)
     draw_arrow(draw, 325, 294, "up")
     draw.text((342, 291), f"{format_rate(snapshot.net_up_mb_s)} MB/s", font=f9, fill=WHITE)
     draw_arrow(draw, 395, 294, "down")

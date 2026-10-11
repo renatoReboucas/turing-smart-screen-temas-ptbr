@@ -20,7 +20,7 @@ LOG = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class WeatherSnapshot:
     temperature: str = "--°C"
-    description: str = "NO DATA"
+    description: str = "SEM DADOS"
     condition: str = "unknown"
     location: str = ""
     high_c: str = "--°"
@@ -31,25 +31,24 @@ class WeatherSnapshot:
 def compact_condition(description: str) -> tuple[str, str]:
     normalized = description.strip().lower()
     if "thunder" in normalized:
-        return "THUNDER", "thunder"
+        return "TROVOADA", "thunder"
     if "snow" in normalized or "blizzard" in normalized:
-        return "SNOW", "snow"
+        return "NEVE", "snow"
     if "sleet" in normalized or "ice" in normalized:
-        return "SLEET", "snow"
+        return "GELO", "snow"
     if "rain" in normalized or "shower" in normalized:
-        return "RAIN", "rain"
+        return "CHUVA", "rain"
     if "drizzle" in normalized:
-        return "DRIZZLE", "rain"
+        return "GAROA", "rain"
     if "fog" in normalized or "mist" in normalized:
-        return "FOG", "fog"
+        return "NEBLINA", "fog"
     if "partly" in normalized:
-        return "PARTLY CLOUDY", "partly_cloudy"
+        return "NUBL. PARC.", "partly_cloudy"
     if "cloud" in normalized or "overcast" in normalized:
-        return "CLOUDY", "cloudy"
+        return "NUBLADO", "cloudy"
     if "sun" in normalized or "clear" in normalized:
-        return "CLEAR", "clear"
-    label = description.upper()
-    return (label if len(label) <= 14 else "WEATHER", "unknown")
+        return "LIMPO", "clear"
+    return "TEMPO", "unknown"
 
 
 class WeatherCollector:
@@ -94,7 +93,7 @@ class WeatherCollector:
             current["weatherDesc"][0]["value"]
         )
         nearest_area = data.get("nearest_area") or []
-        location_name = self.config.location.upper() or "HO CHI MINH CITY"
+        location_name = self.config.location.upper() or "HO CHI MINH"
         if nearest_area and not self.config.location:
             names = nearest_area[0].get("areaName") or []
             if names:
